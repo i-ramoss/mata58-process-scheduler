@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Simulador de Escalonamento de Processos</title>
+        <link rel="stylesheet" href="css/styles.css" />
+    </head>
+    <body>
+        <h1>Simulador de Escalonamento de Processos</h1>
+
+        <div class="container">
+            <!-- Seção para adicionar processos -->
+            <div class="process-list">
+                <h3>Processos (valores default)</h3>
+                <div class="process-inputs">
+                    <label>Tempo de execução: <input type="number" id="executionTime" min="1" value="5" /></label>
+                    <br />
+                    <label>Páginas: <input type="number" id="pages" min="1" value="1" /></label>
+                    <br />
+                    <label>Deadline: <input type="number" id="deadline" min="1" value="8" /></label>
+                    <br />
+                    <label>Chegada: <input type="number" id="arrivalTime" min="0" value="0" /></label>
+                    <br />
+                    <button id="addProcessBtn">Adicionar processo</button>
+                </div>
+            </div>
+
+            <!-- Seção de configuração -->
+            <div class="config">
+                <h3>Configurações</h3>
+                <label>Quantum: <input type="number" id="quantum" value="2" min="1" /></label>
+                <br />
+                <label>Sobrecarga: <input type="number" id="overhead" value="1" min="0" /></label>
+                <br />
+                <label>
+                    Algoritmo de escalonamento:
+                    <select id="schedulingAlgorithm">
+                        <option value="FIFO">FIFO</option>
+                        <option value="SJF">SJF</option>
+                        <option value="RR">Round Robin</option>
+                        <option value="EDF">EDF</option>
+                    </select>
+                </label>
+                <br />
+            </div>
+
+            <!-- Seção de controles (velocidade/execução) -->
+            <div class="controls">
+                <h3>Controles</h3>
+                <label>
+                    Velocidade (ms por bloco):
+                    <input type="range" id="speedRange" min="100" max="2000" step="100" value="500" />
+                </label>
+                <p id="speedValue">500 ms</p>
+                <button id="startBtn">Iniciar execução</button>
+                <button id="resetBtn">Resetar execução</button>
+            </div>
+        </div>
+
+        <!-- Tabela de processos criados -->
+        <div id="processTable"></div>
+
+        <!-- Gantt Chart -->
+        <div class="gantt-container" id="ganttChart">
+            <!-- Blocos do Gantt vão ser inseridos aqui via JS -->
+            <!-- TODO: ver como criar os blocos dos processos -->
+        </div>
+
+        <script type="module" src="js/main.js"></script>
+    </body>
+</html>
