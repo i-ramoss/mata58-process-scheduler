@@ -28,12 +28,17 @@ addProcessBtn.addEventListener("click", () => {
     renderProcessTable();
 });
 
+// Atualiza valor exibido da velocidade
+speedRange.addEventListener("input", () => {
+    speedValue.textContent = speedRange.value + " ms";
+});
+
 // Função para renderizar a lista de processos criados
 function renderProcessTable() {
     let html =
         "<table border='1' cellpadding='5'><tr><th>ID</th><th>Tempo de execução</th><th>Páginas</th><th>Deadline</th><th>Chegada</th></tr>";
 
-    processes.forEach((proc) => {
+    processes.forEach(proc => {
         html += `<tr>
           <td>${proc.id}</td>
           <td>${proc.executionTime}</td>
