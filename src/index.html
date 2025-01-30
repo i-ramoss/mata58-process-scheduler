@@ -15,7 +15,7 @@
                 <div class="process-inputs">
                     <label>Tempo de execução: <input type="number" id="executionTime" min="1" value="5" /></label>
                     <br />
-                    <label>Páginas: <input type="number" id="pages" min="1" value="1" /></label>
+                    <label>Páginas: <input type="number" id="pages" min="1" max="10" value="1" /></label>
                     <br />
                     <label>Deadline: <input type="number" id="deadline" min="1" value="8" /></label>
                     <br />
@@ -42,6 +42,14 @@
                     </select>
                 </label>
                 <br />
+                <label>
+                    Algoritmo de substituição de páginas:
+                    <select id="pageReplacementAlgorithm">
+                        <option value="LRU">LRU</option>
+                        <option value="FIFO">FIFO</option>
+                    </select>
+                </label>
+                <br />
             </div>
 
             <!-- Seção de controles (velocidade/execução) -->
@@ -60,10 +68,22 @@
         <!-- Tabela de processos criados -->
         <div id="processTable"></div>
 
-        <!-- Gantt Chart -->
+        <!-- Gráfico de Gantt -->
         <div class="gantt-container" id="ganttChart">
             <!-- Blocos do Gantt vão ser inseridos aqui via JS -->
-            <!-- TODO: ver como criar os blocos dos processos -->
+        </div>
+
+        <!-- Gráfico das Memórias -->
+        <div class="memory-container" id="memoryContainer">
+            <div class="ram-container" id="ramContainer">
+                <h3>Memória RAM</h3>
+                <div class="memory-grid" id="ramGrid"></div>
+            </div>
+
+            <div class="disk-container" id="diskContainer">
+                <h3>Memória Virtual (Disco)</h3>
+                <div class="memory-grid" id="diskGrid"></div>
+            </div>
         </div>
 
         <script type="module" src="js/main.js"></script>
