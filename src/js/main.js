@@ -48,6 +48,20 @@ speedRange.addEventListener("input", () => {
     speedValue.textContent = speedRange.value + " ms";
 });
 
+// Ao clicar em Iniciar Execução
+startBtn.addEventListener("click", () => {
+    if (processes.length === 0) {
+        alert("Adicione ao menos um processo!");
+        return;
+    }
+    runScheduling();
+});
+
+// Simula o atraso de execução de um processo
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // Função para renderizar a lista de processos criados
 function renderProcessTable() {
     let html =
@@ -127,9 +141,123 @@ function createGanttBlock(type, text, deadlineExceeded = false) {
     return block;
 }
 
+// Checa se todos os processos já foram executados
+function allDone(listOfProcessToBeExecuted) {
+    return listOfProcessToBeExecuted.every(process => process.remainingTime <= 0);
+}
+
+// TODO: função para criar blocos de waiting ou noArrived (evitar repetição de código)
+
+// Função principal de execução do escalonamento
+async function runScheduling() {
+    // Copia a lista de processos original para uma outra estrutura, para não perder os dados originais
+    // Cria-se novos atributos que serão utilizados durante a execução
+    let listOfProcessToBeExecuted = processes.map(currentProcess => ({
+        ...currentProcess,
+        remainingTime: currentProcess.executionTime,
+        finishTime: 0,
+        individualDeadline: currentProcess.arrival + currentProcess.deadline,
+    }));
+
+    // Criamos as linhas no gráfico para cada processo
+    const processRows = createGanttRowsForProcesses(listOfProcessToBeExecuted);
+
+    // Variáveis de controle em relação à sobrecarga, tempo atual e último processo executado
+    const overheadTime = parseInt(overheadInput.value, 10) || 0;
+    let currentTime = 0;
+    let lastProcess = null;
+
+    // Loop de execução da lista de processos
+    while (!allDone(listOfProcessToBeExecuted)) {
+        // currentProcess é o próximo processo que será executado, retornado pelo algoritmo de escalonamento
+        // TODO: chamar algoritmo de escalonamento correto e retornar o processo que deve ser executado
+        const currentProcess = null;
+
+        // Não tem processo para ser executado no momento
+        if (!currentProcess) {
+            console.log("🔥 não tem processo para ser executado no momento");
+            listOfProcessToBeExecuted.forEach(process => {
+                if (process.remainingTime > 0) {
+                    // Adiciona bloco de waiting na linha de todos os processos que chegaram e ainda não terminaram
+                    if (process.arrival <= currentTime) {
+                        const waitingBlock = createGanttBlock("waiting", "");
+                        processRows[process.id].appendChild(waitingBlock);
+                        // Adiciona bloco de noArrived na linha de todos os processos que não chegarm
+                    } else {
+                        const noArrivedBlock = createGanttBlock("noArrived", "");
+                        processRows[process.id].appendChild(noArrivedBlock);
+                    }
+                }
+            });
+
+            // Incrementa o tempo atual e aguarda um tempo para visualização
+            currentTime++;
+            await sleep(speedRange.value);
+            continue;
+        }
+
+        // Adiciona blocos de sobrecarga (se possível) quando houver mudança de processo
+        if (lastProcess && lastProcess !== currentProcess && overheadTime > 0) {
+            console.log("lastProcess", lastProcess);
+            for (let i = 0; i < overheadTime; i++) {
+                const overheadBlock = createGanttBlock("overhead", "");
+                processRows[lastProcess.id].appendChild(overheadBlock);
+
+                listOfProcessToBeExecuted.forEach(process => {
+                    if (process.id !== lastProcess.id && process.remainingTime > 0) {
+                        if (process.arrival <= currentTime) {
+                            const waitingBlock = createGanttBlock("waiting", "");
+                            processRows[process.id].appendChild(waitingBlock);
+                        } else {
+                            const noArrivedBlock = createGanttBlock("noArrived", "");
+                            processRows[process.id].appendChild(noArrivedBlock);
+                        }
+                    }
+                });
+
+                currentTime++;
+                await sleep(speedRange.value);
+            }
+        }
+
+        // Adiciona o bloco correspondente a todos os outros processos pendentes ou que ainda não chegaram, e que não estão em execução
+        listOfProcessToBeExecuted.forEach(process => {
+            if (process.id !== currentProcess.id && process.remainingTime > 0) {
+                if (process.arrival <= currentTime) {
+                    const waitingBlock = createGanttBlock("waiting", "");
+                    processRows[process.id].appendChild(waitingBlock);
+                } else {
+                    const noArrivedBlock = createGanttBlock("noArrived", "");
+                    processRows[process.id].appendChild(noArrivedBlock);
+                }
+            }
+        });
+
+        const executionBlock = createGanttBlock("execution", currentProcess.id);
+
+        // Previsao de termino do processo
+        const willFinishTime = currentTime + 1;
+
+        if (willFinishTime > currentProcess.individualDeadline) {
+            executionBlock.classList.add("deadline-exceeded");
+        }
+
+        // Adiciona o bloco de execução na linha do processo
+        processRows[currentProcess.id].appendChild(executionBlock);
+
+        currentTime++;
+        currentProcess.remainingTime--;
+
+        if (currentProcess.remainingTime <= 0) {
+            currentProcess.finishTime = currentTime;
+        }
+
+        await sleep(speedRange.value);
+
+        lastProcess = currentProcess;
+    }
+}
 
 // Renderiza a tabela vazia de processos
 // TODO: da para já deixar no HTML e só preencher os valores com JS
 renderProcessTable();
-
-// TODO: Implementar a lógica do escalonador
