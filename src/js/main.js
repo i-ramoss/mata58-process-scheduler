@@ -12,6 +12,20 @@ const addProcessBtn = document.getElementById("addProcessBtn");
 // Tabela de processos
 const processTableDiv = document.getElementById("processTable");
 
+// Inputs de quantum, sobrecarga, velocidade e algoritmo de escalonamento
+const quantumInput = document.getElementById("quantum");
+const overheadInput = document.getElementById("overhead");
+const speedRange = document.getElementById("speedRange");
+const speedValue = document.getElementById("speedValue");
+const schedulingSelect = document.getElementById("schedulingAlgorithm");
+
+// Botões de ação
+const startBtn = document.getElementById("startBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+// Grafico de Gantt
+const ganttChart = document.getElementById("ganttChart");
+
 // Adiciona processo à lista (sem apagar dados)
 addProcessBtn.addEventListener("click", () => {
     const id = processes.length + 1;
@@ -23,6 +37,7 @@ addProcessBtn.addEventListener("click", () => {
         deadline: parseInt(deadlineInput.value, 10),
         arrival: parseInt(arrivalTimeInput.value, 10),
     };
+
     processes.push(newProcess);
     console.log("processes", processes);
     renderProcessTable();
@@ -38,6 +53,7 @@ function renderProcessTable() {
     let html =
         "<table border='1' cellpadding='5'><tr><th>ID</th><th>Tempo de execução</th><th>Páginas</th><th>Deadline</th><th>Chegada</th></tr>";
 
+    // TODO: criar objetos que possam ser editáveis depois de criados com valores default
     processes.forEach(proc => {
         html += `<tr>
           <td>${proc.id}</td>
@@ -50,6 +66,39 @@ function renderProcessTable() {
 
     html += "</table>"; // Fecha a tabela
     processTableDiv.innerHTML = html;
+}
+
+// Cria uma linha no gráfico para cada processo da lista
+function createGanttRowsForProcesses(processList) {
+    // Limpa as linhas existentes do gráfico
+    ganttChart.innerHTML = "";
+
+    const processRows = {};
+
+    processList.forEach(currentProcess => {
+        // Cria um container para a linha do processo
+        const rowContainer = document.createElement("div");
+        rowContainer.classList.add("gantt-row");
+
+        // Cria um label do lado esquerdo com o nome do processo
+        const label = document.createElement("div");
+        label.classList.add("gantt-label");
+        label.textContent = currentProcess.id + " : ";
+        rowContainer.appendChild(label);
+
+        // Cria um container que vai armazenar os blocos
+        const blocksContainer = document.createElement("div");
+        blocksContainer.classList.add("gantt-blocks-container");
+        rowContainer.appendChild(blocksContainer);
+
+        // Adiciona essa linha ao gráfico
+        ganttChart.appendChild(rowContainer);
+
+        // Armazena referência para atualização dos status dos blocos
+        processRows[currentProcess.id] = blocksContainer;
+    });
+
+    return processRows;
 }
 
 // Renderiza a tabela vazia de processos
