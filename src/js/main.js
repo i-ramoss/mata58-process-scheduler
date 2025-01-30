@@ -3,28 +3,28 @@ const processes = [];
 
 // Referências aos elementos do HTML
 // Inputs dos dados do processo
-const executionTimeInput = document.getElementById('executionTime');
-const pagesInput = document.getElementById('pages');
-const deadlineInput = document.getElementById('deadline');
-const arrivalTimeInput = document.getElementById('arrivalTime');
-const addProcessBtn = document.getElementById('addProcessBtn');
+const executionTimeInput = document.getElementById("executionTime");
+const pagesInput = document.getElementById("pages");
+const deadlineInput = document.getElementById("deadline");
+const arrivalTimeInput = document.getElementById("arrivalTime");
+const addProcessBtn = document.getElementById("addProcessBtn");
 
 // Tabela de processos
-const processTableDiv = document.getElementById('processTable');
+const processTableDiv = document.getElementById("processTable");
 
 // Adiciona processo à lista (sem apagar dados)
-addProcessBtn.addEventListener('click', () => {
+addProcessBtn.addEventListener("click", () => {
     const id = processes.length + 1;
 
     const newProcess = {
-        id: 'P' + id,
+        id: "P" + id,
         executionTime: parseInt(executionTimeInput.value, 10),
         pages: parseInt(pagesInput.value, 10),
         deadline: parseInt(deadlineInput.value, 10),
         arrival: parseInt(arrivalTimeInput.value, 10),
     };
     processes.push(newProcess);
-    console.log('processes', processes);
+    console.log("processes", processes);
     renderProcessTable();
 });
 
@@ -43,7 +43,7 @@ function renderProcessTable() {
         </tr>`;
     });
 
-    html += '</table>'; // Fecha a tabela
+    html += "</table>"; // Fecha a tabela
     processTableDiv.innerHTML = html;
 }
 
