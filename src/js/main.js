@@ -101,6 +101,33 @@ function createGanttRowsForProcesses(processList) {
     return processRows;
 }
 
+// Cria um bloco para as linhas dos processos no gráfico
+function createGanttBlock(type, text, deadlineExceeded = false) {
+    const block = document.createElement("div");
+    block.classList.add("gantt-block");
+
+    // Dependendo do tipo, adiciona estilização própria
+    if (type === "waiting") {
+        block.classList.add("waiting");
+    } else if (type === "execution") {
+        block.classList.add("execution");
+    } else if (type === "overhead") {
+        block.classList.add("overhead");
+    } else if (type === "noArrived") {
+        block.classList.add("no-arrived");
+    }
+
+    // block.textContent = text || " ";
+
+    // Em casos de sobrecarga, o bloco é marcado
+    if (deadlineExceeded) {
+        block.classList.add("deadline-exceeded");
+    }
+
+    return block;
+}
+
+
 // Renderiza a tabela vazia de processos
 // TODO: da para já deixar no HTML e só preencher os valores com JS
 renderProcessTable();

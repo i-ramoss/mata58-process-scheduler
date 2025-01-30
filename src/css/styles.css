@@ -107,3 +107,71 @@ button:hover {
     background-color: #007bff;
     color: white;
 }
+
+/* Estilização do Gráfico de Gantt */
+.gantt-container {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+
+    margin: 20px auto;
+    width: 100%;
+    max-width: 1200px;
+    border: 1px solid #ccc;
+    padding: 15px;
+    min-height: 120px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.gantt-row {
+    display: flex;
+    align-items: center;
+    width: fit-content;
+}
+
+.gantt-label {
+    min-width: 50px;
+    text-align: right;
+    font-weight: bold;
+    margin-right: 5px;
+    flex-shrink: 0;
+}
+
+.gantt-blocks-container {
+    display: flex;
+    gap: 4px;
+    /* overflow-x: auto; */
+    /* white-space: nowrap; */
+    /* padding-bottom: 5px; */
+}
+
+.gantt-block {
+    height: 25px;
+    width: 25px;
+    border: 1px solid #999;
+    border-radius: 5px;
+}
+
+/* Cores para os estados */
+.execution {
+    background-color: #28a745;
+}
+.waiting {
+    background-color: #ffc107;
+}
+.overhead {
+    background-color: #dc3545;
+}
+.no-arrived {
+    border: none;
+    background-color: #ccc;
+}
+.deadline-exceeded {
+    /* background-color: #000000; */
+    outline: 1px solid #dc3545;
+}
