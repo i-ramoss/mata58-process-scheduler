@@ -1,3 +1,5 @@
+import { initializeProcessPageTable, ensureProcessPagesInRAM, renderMemory } from "./memory.js";
+
 // Estrutura de dados para armazenar os processos
 const processes = [];
 
@@ -17,7 +19,7 @@ const quantumInput = document.getElementById("quantum");
 const overheadInput = document.getElementById("overhead");
 const speedRange = document.getElementById("speedRange");
 const speedValue = document.getElementById("speedValue");
-const schedulingSelect = document.getElementById("schedulingAlgorithm");
+const schedulingAlgorithmSelected = document.getElementById("schedulingAlgorithm");
 
 // Botões de ação
 const startBtn = document.getElementById("startBtn");
@@ -36,11 +38,14 @@ addProcessBtn.addEventListener("click", () => {
         pages: parseInt(pagesInput.value, 10),
         deadline: parseInt(deadlineInput.value, 10),
         arrival: parseInt(arrivalTimeInput.value, 10),
+        pageTable: [],
     };
 
+    initializeProcessPageTable(newProcess);
+
     processes.push(newProcess);
-    console.log("processes", processes);
     renderProcessTable();
+    renderMemory();
 });
 
 // Atualiza valor exibido da velocidade
@@ -130,6 +135,7 @@ function createGanttBlock(type, text, deadlineExceeded = false) {
     } else if (type === "noArrived") {
         block.classList.add("no-arrived");
     }
+    // TODO: adicionar else if para page fault
 
     // block.textContent = text || " ";
 
@@ -173,9 +179,12 @@ async function runScheduling() {
         // TODO: chamar algoritmo de escalonamento correto e retornar o processo que deve ser executado
         const currentProcess = null;
 
-        // Não tem processo para ser executado no momento
-        if (!currentProcess) {
-            console.log("🔥 não tem processo para ser executado no momento");
+        if (currentProcess) {
+            // TODO: atualizar currentTime com o retorno da função (adicionando ou não page faults)
+            ensureProcessPagesInRAM(currentProcess, currentTime);
+            // currentTime = ensureProcessPagesInRAM(currentProcess, currentTime);
+        } else {
+            console.log(`🔥 não tem processo para ser executado no tempo: ${currentTime}`);
             listOfProcessToBeExecuted.forEach(process => {
                 if (process.remainingTime > 0) {
                     // Adiciona bloco de waiting na linha de todos os processos que chegaram e ainda não terminaram
@@ -198,7 +207,6 @@ async function runScheduling() {
 
         // Adiciona blocos de sobrecarga (se possível) quando houver mudança de processo
         if (lastProcess && lastProcess !== currentProcess && overheadTime > 0) {
-            console.log("lastProcess", lastProcess);
             for (let i = 0; i < overheadTime; i++) {
                 const overheadBlock = createGanttBlock("overhead", "");
                 processRows[lastProcess.id].appendChild(overheadBlock);
@@ -258,6 +266,8 @@ async function runScheduling() {
     }
 }
 
+// Temporário (usado para processos já instanciados em código)
+processes.forEach(initializeProcessPageTable);
+
 // Renderiza a tabela vazia de processos
-// TODO: da para já deixar no HTML e só preencher os valores com JS
 renderProcessTable();

@@ -1,0 +1,70 @@
+/* Estilização das Memórias */
+.memory-container {
+    display: flex;
+    justify-content: center; /* change to space-between later?*/
+    gap: 50px;
+    align-items: flex-start;
+
+    margin: 20px auto;
+}
+
+.memory-grid {
+    display: grid;
+    gap: 5px;
+    justify-content: center;
+    align-items: center;
+
+    margin: 10px auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#ramGrid {
+    grid-template-columns: repeat(10, 1fr);
+    width: 100%;
+    max-width: 450px;
+}
+
+#diskGrid {
+    grid-template-columns: repeat(10, 1fr);
+    width: 100%;
+    max-width: 450px;
+}
+
+.memory-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    width: 35px;
+    height: 35px;
+    /* border: 1px solid #999; */
+    border-radius: 5px;
+    background-color: #ddd;
+
+    font-size: 14px;
+    font-weight: bold;
+
+    position: relative;
+}
+
+.ram-block {
+    background-color: #cfffcf;
+}
+
+.disk-block {
+    background-color: #add8e6;
+}
+
+.memory-position {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #555;
+}
