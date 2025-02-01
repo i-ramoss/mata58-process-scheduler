@@ -1,4 +1,4 @@
-import { initializeProcessPageTable, renderMemory } from "./memory.js";
+import { initializeProcessPageTable, ensureProcessPagesInRAM, renderMemory } from "./memory.js";
 
 // Estrutura de dados para armazenar os processos
 const processes = [];
@@ -135,6 +135,7 @@ function createGanttBlock(type, text, deadlineExceeded = false) {
     } else if (type === "noArrived") {
         block.classList.add("no-arrived");
     }
+    // TODO: adicionar else if para page fault
 
     // block.textContent = text || " ";
 
@@ -178,9 +179,12 @@ async function runScheduling() {
         // TODO: chamar algoritmo de escalonamento correto e retornar o processo que deve ser executado
         const currentProcess = null;
 
-        // Não tem processo para ser executado no momento
-        if (!currentProcess) {
-            console.log("🔥 não tem processo para ser executado no momento");
+        if (currentProcess) {
+            // TODO: atualizar currentTime com o retorno da função (adicionando ou não page faults)
+            ensureProcessPagesInRAM(currentProcess, currentTime);
+            // currentTime = ensureProcessPagesInRAM(currentProcess, currentTime);
+        } else {
+            console.log(`🔥 não tem processo para ser executado no tempo: ${currentTime}`);
             listOfProcessToBeExecuted.forEach(process => {
                 if (process.remainingTime > 0) {
                     // Adiciona bloco de waiting na linha de todos os processos que chegaram e ainda não terminaram
