@@ -71,16 +71,16 @@ function sleep(ms) {
 // Função para renderizar a lista de processos na interface
 function renderProcessTable() {
     let html =
-        "<table border='1' cellpadding='5'><tr><th>ID</th><th>Tempo de execução</th><th>Páginas</th><th>Deadline</th><th>Chegada</th></tr>";
+        "<table border='1' cellpadding='5'><tr><th>ID</th><th>Chegada</th><th>Tempo de execução</th><th>Deadline</th><th>Páginas</th></tr>";
 
     // Cria a tabela de processos com os dados preenchidos
     processes.forEach(proc => {
         html += `<tr>
           <td>${proc.id}</td>
-          <td>${proc.executionTime}</td>
-          <td>${proc.pages}</td>
-          <td>${proc.deadline}</td>
           <td>${proc.arrival}</td>
+          <td>${proc.executionTime}</td>
+          <td>${proc.deadline}</td>
+          <td>${proc.pages}</td>
         </tr>`;
     });
 
