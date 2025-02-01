@@ -150,11 +150,11 @@ function removePageFromDisk(processId, pageNumber) {
 }
 
 function handlePageReplacement(processId, pageNumber, currentTime) {
-    const schedulingAlgorithmSelected = document.getElementById("schedulingAlgorithm").value;
+    const pageReplacementAlgorithm = document.getElementById("pageReplacementAlgorithm").value;
 
-    if (schedulingAlgorithmSelected === "FIFO") {
+    if (pageReplacementAlgorithm === "FIFO") {
         replacePageByFIFO(processId, pageNumber, currentTime);
-    } else if (schedulingAlgorithmSelected === "LRU") {
+    } else if (pageReplacementAlgorithm === "LRU") {
         replacePageByLRU(processId, pageNumber, currentTime);
     }
 }
