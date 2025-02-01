@@ -1,4 +1,6 @@
-// Estrutura de dados para armazenar os processos que serão gerenciados pelo escalonador
+import { initializeProcessPageTable, ensureProcessPagesInRAM, renderMemory } from "./memory.js";
+
+// Estrutura de dados para armazenar os processos
 const processes = [];
 
 // Referências aos elementos HTML que interagem com os dados dos processos
@@ -16,7 +18,7 @@ const quantumInput = document.getElementById("quantum");
 const overheadInput = document.getElementById("overhead");
 const speedRange = document.getElementById("speedRange");
 const speedValue = document.getElementById("speedValue");
-const schedulingSelect = document.getElementById("schedulingAlgorithm");
+const schedulingAlgorithmSelected = document.getElementById("schedulingAlgorithm");
 
 // Botões de ação para interagir com o escalonador
 const startBtn = document.getElementById("startBtn");
@@ -36,12 +38,14 @@ addProcessBtn.addEventListener("click", () => {
         pages: parseInt(pagesInput.value, 10),
         deadline: parseInt(deadlineInput.value, 10),
         arrival: parseInt(arrivalTimeInput.value, 10),
+        pageTable: [],
     };
 
-    // Adiciona o novo processo à lista
+    initializeProcessPageTable(newProcess);
+
     processes.push(newProcess);
-    console.log("processes", processes); // Exibe os processos no console para depuração
-    renderProcessTable(); // Atualiza a tabela de processos exibida na tela
+    renderProcessTable();
+    renderMemory();
 });
 
 // Atualiza o valor exibido da velocidade com base no input do usuário
@@ -55,7 +59,8 @@ startBtn.addEventListener("click", () => {
         alert("Adicione ao menos um processo!"); // Alerta se não houver processos
         return;
     }
-    runScheduling(); // Inicia o processo de escalonamento
+
+    runScheduling(); // Inicia a execução dos processos
 });
 
 // Função para simular um atraso na execução de um processo (usada para a animação)
@@ -117,7 +122,7 @@ function createGanttRowsForProcesses(processList) {
 }
 
 // Função para criar um bloco no gráfico de Gantt
-function createGanttBlock(type, text, algorithm) {
+function createGanttBlock(type) {
     const block = document.createElement("div");
     block.classList.add("gantt-block");
 
@@ -131,11 +136,13 @@ function createGanttBlock(type, text, algorithm) {
     } else if (type === "noArrived") {
         block.classList.add("no-arrived");
     }
+    // TODO: adicionar else if para page fault
 
+    // Nunca estava sendo acessado de fato
     // Marca o bloco como "deadline-exceeded" caso o processo ultrapasse o prazo, exceto para FIFO ou SJF
-    if ((algorithm !== "FIFO" && algorithm !== "SJF") && type === "execution" && text.finishTime > text.individualDeadline) {
-        block.classList.add("deadline-exceeded");
-    }
+    // if ((algorithm !== "FIFO" && algorithm !== "SJF") && type === "execution") {
+    //     block.classList.add("deadline-exceeded");
+    // }
 
     return block;
 }
@@ -148,9 +155,10 @@ function allDone(listOfProcessToBeExecuted) {
 // Função para obter o próximo processo a ser executado usando FIFO
 function getNextProcessFIFO(processList, currentTime) {
     // Filtra e ordena os processos pela ordem de chegada
-    const sortedProcesses = processList.filter(p => p.arrival <= currentTime && p.remainingTime > 0)
-                                      .sort((a, b) => a.arrival - b.arrival);
-    
+    const sortedProcesses = processList
+        .filter(p => p.arrival <= currentTime && p.remainingTime > 0)
+        .sort((a, b) => a.arrival - b.arrival);
+
     return sortedProcesses.length > 0 ? sortedProcesses[0] : null; // Retorna o primeiro processo da lista
 }
 
@@ -212,7 +220,6 @@ function getNextProcessEDF(processList, currentTime, quantum) {
     return nextProcess;
 }
 
-
 // Função principal que executa o escalonamento dos processos
 async function runScheduling() {
     // Cria uma cópia da lista de processos, adicionando dados necessários para execução
@@ -228,7 +235,9 @@ async function runScheduling() {
 
     // Variáveis de controle do tempo e do último processo executado
     const overheadTime = parseInt(overheadInput.value, 10) || 0;
+    const schedulingAlgorithm = schedulingAlgorithmSelected.value;
     const quantum = 2; // Definido para 2 por padrão
+
     let currentTime = 0;
     let lastProcess = null;
 
@@ -237,7 +246,7 @@ async function runScheduling() {
         let currentProcess = null;
 
         // Determina qual algoritmo de escalonamento será usado
-        switch (schedulingSelect.value) {
+        switch (schedulingAlgorithm) {
             case "SJF":
                 currentProcess = getNextProcessSJF(listOfProcessToBeExecuted, currentTime);
                 break;
@@ -255,16 +264,21 @@ async function runScheduling() {
                 return; // Interrompe a execução caso o algoritmo não esteja implementado
         }
 
-        // Se não há processo para executar no momento, adiciona blocos de waiting
-        if (!currentProcess) {
-            console.log("🔥 não tem processo para ser executado no momento");
+        if (currentProcess) {
+            // TODO: atualizar currentTime com o retorno da função (adicionando ou não page faults)
+            ensureProcessPagesInRAM(currentProcess, currentTime);
+            // currentTime = ensureProcessPagesInRAM(currentProcess, currentTime);
+        } else {
+            console.log(`🔥 não tem processo para ser executado no tempo: ${currentTime}`);
+
+            // Se não há processo para executar no momento, adiciona blocos de waiting/noArrived
             listOfProcessToBeExecuted.forEach(process => {
                 if (process.remainingTime > 0) {
                     if (process.arrival <= currentTime) {
-                        const waitingBlock = createGanttBlock("waiting", "");
+                        const waitingBlock = createGanttBlock("waiting");
                         processRows[process.id].appendChild(waitingBlock);
                     } else {
-                        const noArrivedBlock = createGanttBlock("noArrived", "");
+                        const noArrivedBlock = createGanttBlock("noArrived");
                         processRows[process.id].appendChild(noArrivedBlock);
                     }
                 }
@@ -277,19 +291,25 @@ async function runScheduling() {
         }
 
         // Adiciona blocos de overhead caso haja troca de processo (apenas RR e EDF)
-        if (lastProcess && lastProcess !== currentProcess && overheadTime > 0 && (schedulingSelect.value =="RR" || schedulingSelect.value == "EDF")){
+        if (
+            lastProcess &&
+            lastProcess !== currentProcess &&
+            overheadTime > 0 &&
+            (schedulingAlgorithm == "RR" || schedulingAlgorithm == "EDF")
+        ) {
             console.log("lastProcess", lastProcess);
+
             for (let i = 0; i < overheadTime; i++) {
-                const overheadBlock = createGanttBlock("overhead", "");
+                const overheadBlock = createGanttBlock("overhead");
                 processRows[lastProcess.id].appendChild(overheadBlock);
 
                 listOfProcessToBeExecuted.forEach(process => {
                     if (process.id !== lastProcess.id && process.remainingTime > 0) {
                         if (process.arrival <= currentTime) {
-                            const waitingBlock = createGanttBlock("waiting", "");
+                            const waitingBlock = createGanttBlock("waiting");
                             processRows[process.id].appendChild(waitingBlock);
                         } else {
-                            const noArrivedBlock = createGanttBlock("noArrived", "");
+                            const noArrivedBlock = createGanttBlock("noArrived");
                             processRows[process.id].appendChild(noArrivedBlock);
                         }
                     }
@@ -304,21 +324,24 @@ async function runScheduling() {
         listOfProcessToBeExecuted.forEach(process => {
             if (process.id !== currentProcess.id && process.remainingTime > 0) {
                 if (process.arrival <= currentTime) {
-                    const waitingBlock = createGanttBlock("waiting", "");
+                    const waitingBlock = createGanttBlock("waiting");
                     processRows[process.id].appendChild(waitingBlock);
                 } else {
-                    const noArrivedBlock = createGanttBlock("noArrived", "");
+                    const noArrivedBlock = createGanttBlock("noArrived");
                     processRows[process.id].appendChild(noArrivedBlock);
                 }
             }
         });
 
         // Cria o bloco de execução para o processo atual
-        const executionBlock = createGanttBlock("execution", currentProcess.id);
+        const executionBlock = createGanttBlock("execution");
 
         // Verifica a previsão de término e se o deadline foi ultrapassado
         const willFinishTime = currentTime + 1;
-        if (!(schedulingSelect.value === "FIFO" || schedulingSelect.value === "SJF") && willFinishTime > currentProcess.individualDeadline) {
+        if (
+            !(schedulingAlgorithm === "FIFO" || schedulingAlgorithm === "SJF") &&
+            willFinishTime > currentProcess.individualDeadline
+        ) {
             executionBlock.classList.add("deadline-exceeded");
         }
 
@@ -353,9 +376,11 @@ async function runScheduling() {
     const averageTurnaroundTime = totalTurnaroundTime / listOfProcessToBeExecuted.length;
 
     // Exibe o turnaround médio na interface
-    document.getElementById("averageTurnaround").textContent =
-        `Turnaround Médio: ${averageTurnaroundTime.toFixed(2)}`;
+    document.getElementById("averageTurnaround").textContent = `Turnaround Médio: ${averageTurnaroundTime.toFixed(2)}`;
 }
 
-// Inicializa a tabela vazia de processos na interface
+// Temporário (usado para processos já instanciados em código)
+processes.forEach(initializeProcessPageTable);
+
+// Renderiza a tabela vazia de processos
 renderProcessTable();
