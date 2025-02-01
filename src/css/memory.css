@@ -1,7 +1,8 @@
 /* Estilização das Memórias */
 .memory-container {
     display: flex;
-    justify-content: space-evenly; /* change to space-between later? */
+    justify-content: center; /* change to space-between later?*/
+    gap: 50px;
     align-items: flex-start;
 
     margin: 20px auto;

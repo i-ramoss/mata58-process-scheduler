@@ -2,21 +2,22 @@
 const ramMemory = new Array(50).fill(null);
 const diskMemory = new Array(100).fill(null);
 
-function renderMemory() {
+export function renderMemory() {
     const ramGrid = document.getElementById("ramGrid");
     const diskGrid = document.getElementById("diskGrid");
 
+    // Reseta o conteúdo do grid
     ramGrid.innerHTML = "";
     diskGrid.innerHTML = "";
 
     // Cria os blocos de memória RAM
-    ramMemory.forEach((frame, index) => {
+    ramMemory.forEach((page, index) => {
         const block = document.createElement("div");
         block.classList.add("memory-block");
 
-        if (frame) {
+        if (page) {
             block.classList.add("ram-block");
-            block.innerHTML = `<span>${frame.processId}</span>`;
+            block.innerHTML = `<span>${page.processId}</span>`;
         } else {
             block.classList.add("empty-block");
             block.innerHTML = `<span>-</span>`;
@@ -32,13 +33,13 @@ function renderMemory() {
     });
 
     // Cria os blocos de memória do disco
-    diskMemory.forEach((frame, index) => {
+    diskMemory.forEach((page, index) => {
         const block = document.createElement("div");
         block.classList.add("memory-block");
 
-        if (frame) {
+        if (page) {
             block.classList.add("disk-block");
-            block.innerHTML = `<span>${frame.processId}</span>`;
+            block.innerHTML = `<span>${page.processId}</span>`;
         } else {
             block.classList.add("empty-block");
             block.innerHTML = `<span>-</span>`;
@@ -52,6 +53,33 @@ function renderMemory() {
 
         diskGrid.appendChild(block);
     });
+}
+
+export function initializeProcessPageTable(process) {
+    for (let pageNumber = 0; pageNumber < process.pages; pageNumber++) {
+        process.pageTable.push({
+            pageNumber: pageNumber,
+            inRAM: false,
+            memoryFrameIndex: null,
+        });
+
+        movePageToDisk(process.id, pageNumber);
+        renderMemory(); // TODO: it's not necessary later
+    }
+}
+}
+
+function movePageToDisk(processId, pageNumber) {
+    let freeFrameIndex = diskMemory.findIndex(frame => frame === null);
+
+    if (freeFrameIndex !== -1) {
+        diskMemory[freeFrameIndex] = {
+            processId: processId,
+            pageNumber: pageNumber,
+        };
+    } else {
+        console.error("Disco cheio");
+    }
 }
 
 renderMemory();

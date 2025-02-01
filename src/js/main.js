@@ -1,3 +1,5 @@
+import { initializeProcessPageTable, renderMemory } from "./memory.js";
+
 // Estrutura de dados para armazenar os processos
 const processes = [];
 
@@ -17,7 +19,7 @@ const quantumInput = document.getElementById("quantum");
 const overheadInput = document.getElementById("overhead");
 const speedRange = document.getElementById("speedRange");
 const speedValue = document.getElementById("speedValue");
-const schedulingSelect = document.getElementById("schedulingAlgorithm");
+const schedulingAlgorithmSelected = document.getElementById("schedulingAlgorithm");
 
 // Botões de ação
 const startBtn = document.getElementById("startBtn");
@@ -36,11 +38,14 @@ addProcessBtn.addEventListener("click", () => {
         pages: parseInt(pagesInput.value, 10),
         deadline: parseInt(deadlineInput.value, 10),
         arrival: parseInt(arrivalTimeInput.value, 10),
+        pageTable: [],
     };
 
+    initializeProcessPageTable(newProcess);
+
     processes.push(newProcess);
-    console.log("processes", processes);
     renderProcessTable();
+    renderMemory();
 });
 
 // Atualiza valor exibido da velocidade
@@ -198,7 +203,6 @@ async function runScheduling() {
 
         // Adiciona blocos de sobrecarga (se possível) quando houver mudança de processo
         if (lastProcess && lastProcess !== currentProcess && overheadTime > 0) {
-            console.log("lastProcess", lastProcess);
             for (let i = 0; i < overheadTime; i++) {
                 const overheadBlock = createGanttBlock("overhead", "");
                 processRows[lastProcess.id].appendChild(overheadBlock);
@@ -258,6 +262,8 @@ async function runScheduling() {
     }
 }
 
+// Temporário (usado para processos já instanciados em código)
+processes.forEach(initializeProcessPageTable);
+
 // Renderiza a tabela vazia de processos
-// TODO: da para já deixar no HTML e só preencher os valores com JS
 renderProcessTable();
