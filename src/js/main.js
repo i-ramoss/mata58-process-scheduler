@@ -207,17 +207,20 @@ function getNextProcessEDF(processList, currentTime, quantum) {
 
     if (readyProcesses.length === 0) return null; // Nenhum processo disponível no momento
 
-    // Ordena os processos pela menor deadline absoluta
-    const sortedProcesses = readyProcesses.sort((a, b) => a.deadline - b.deadline);
-
-    const nextProcess = sortedProcesses[0]; // Pega o processo com o menor deadline
-
-    // Verifica se o tempo de execução do próximo processo não ultrapassa o quantum
-    if (nextProcess.remainingTime > quantum) {
-        nextProcess.remainingTime = quantum;
+// Determina qual algoritmo de escalonamento será usado
+function handleNextProcess(schedulingAlgorithm, processList, currentTime, quantum, currentProcess) {
+    switch (schedulingAlgorithm) {
+        case "SJF":
+            return getNextProcessSJF(processList, currentTime);
+        case "FIFO":
+            return getNextProcessFIFO(processList, currentTime);
+        case "RR":
+            return getNextProcessRR(processList, currentTime, quantum, currentProcess);
+        case "EDF":
+            return getNextProcessEDF(processList, currentTime, quantum, currentProcess);
+        default:
+            alert("Algoritmo não implementado");
     }
-
-    return nextProcess;
 }
 
 // Função principal que executa o escalonamento dos processos
