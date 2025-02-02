@@ -266,6 +266,71 @@ function drawWaitingOrNoArrivedBlocks(processList, currentProcess, processRows, 
     });
 }
 
+// Função principal que executa o escalonamento dos processos
+async function runScheduling() {
+    let listOfProcessToBeExecuted = processes.map(process => ({
+        ...process,
+        remainingTime: process.executionTime,
+        finishTime: 0,
+        individualDeadline: process.arrival + process.deadline,
+        quantumCounter: 0,
+    }));
+
+    // Cria as linhas do gráfico para cada processo
+    const processRows = createGanttRowsForProcesses(listOfProcessToBeExecuted);
+
+    // Variáveis de controle do tempo e do último processo executado
+    const overheadTime = parseInt(overheadInput.value, 10) || 1;
+    const schedulingAlgorithm = schedulingAlgorithmSelected.value;
+    const quantum = parseInt(quantumInput.value, 10) || 2;
+
+    let currentTime = 0;
+    let currentProcess = null;
+
+    // Loop que simula a execução do escalonamento dos processos
+    while (!allDone(listOfProcessToBeExecuted)) {
+        const newProcess = handleNextProcess(
+            schedulingAlgorithm,
+            listOfProcessToBeExecuted,
+            currentTime,
+            quantum,
+            currentProcess
+        );
+
+        if (!newProcess) {
+            drawBlocksWhenCpuIsIdle(listOfProcessToBeExecuted, processRows, currentTime);
+
+            currentTime++;
+            await sleep(speedRange.value);
+            continue;
+        }
+
+        // Verifica preempção por deadline:
+        if (currentProcess && currentProcess.id !== newProcess.id && currentProcess.remainingTime > 0) {
+            console.log(`💡 Preempção por deadline: ${currentProcess.id} → ${newProcess.id} em t=${currentTime}`);
+
+            // Desenha os blocos de overhead para o processo preemptado
+            for (let i = 0; i < overheadTime; i++) {
+                processRows[currentProcess.id].appendChild(createGanttBlock("overhead"));
+
+                drawWaitingOrNoArrivedBlocks(listOfProcessToBeExecuted, currentProcess, processRows, currentTime);
+
+                currentTime++;
+                await sleep(speedRange.value);
+            }
+
+            // Reseta o contador de quantum do processo preemptado
+            currentProcess.quantumCounter = 0;
+        }
+
+        // Atualiza o processo em execução para o novo processo que foi escolhido
+        currentProcess = newProcess;
+
+        // TODO: atualizar currentTime com o retorno da função (adicionando ou não page faults)
+        ensureProcessPagesInRAM(currentProcess, currentTime);
+
+        // Atualiza os blocos de waiting para os processos que não estão sendo executados
+        drawWaitingOrNoArrivedBlocks(listOfProcessToBeExecuted, currentProcess, processRows, currentTime);
 
         // Cria o bloco de execução para o processo atual
         const executionBlock = createGanttBlock("execution");
@@ -286,15 +351,35 @@ function drawWaitingOrNoArrivedBlocks(processList, currentProcess, processRows, 
         currentTime++;
         currentProcess.remainingTime--;
 
-        // Marca o processo como concluído quando o tempo restante for zero
         if (currentProcess.remainingTime <= 0) {
             currentProcess.finishTime = currentTime;
+            currentProcess.quantumCounter = 0;
         }
 
-        // Aguarda antes de passar para o próximo ciclo
-        await sleep(speedRange.value);
+        // Se preemptivo e o processo ainda não terminou, gerencia o contador de quantum APENAS APÓS A EXECUÇÃO
+        else if (schedulingAlgorithm === "RR" || schedulingAlgorithm === "EDF") {
+            currentProcess.quantumCounter++;
 
-        lastProcess = currentProcess;
+            if (currentProcess.quantumCounter >= quantum) {
+                console.log(
+                    `🚀 Preempção por quantum: ${currentProcess.id} → ${currentProcess.id} em t=${currentTime}`
+                );
+
+                for (let i = 0; i < overheadTime; i++) {
+                    processRows[currentProcess.id].appendChild(createGanttBlock("overhead"));
+
+                    drawWaitingOrNoArrivedBlocks(listOfProcessToBeExecuted, currentProcess, processRows, currentTime);
+
+                    currentTime++;
+                    await sleep(speedRange.value);
+                }
+                // Zera o contador e força a seleção de um novo processo na próxima iteração
+                currentProcess.quantumCounter = 0;
+                currentProcess = null;
+            }
+        }
+
+        await sleep(speedRange.value);
     }
 
     // Após a execução, calcula o turnaround de cada processo
