@@ -213,16 +213,25 @@ function getNextProcessFIFO(processList, currentTime) {
 }
 
 // Função para obter o próximo processo a ser executado usando o algoritmo SJF
-function getNextProcessSJF(processList, currentTime) {
+function getNextProcessSJF(processList, currentTime, currentProcess) {
     // Filtra os processos que chegaram e ainda não terminaram
     const readyProcesses = processList.filter(p => p.arrival <= currentTime && p.remainingTime > 0);
 
     if (readyProcesses.length === 0) return null; // Retorna null se não houver processos prontos
 
+    // Se já existe um processo em execução e ele ainda não terminou, retorna ele
+    if (currentProcess && currentProcess.remainingTime > 0) {
+        return currentProcess;
+    }
+
     // Retorna o processo com o menor tempo de execução
-    return readyProcesses.reduce((shortest, process) =>
-        process.executionTime < shortest.executionTime ? process : shortest
-    );
+    // Se houver empate, retorna o processo que chegou primeiro
+    return readyProcesses.reduce((shortest, process) => {
+        if (process.executionTime < shortest.executionTime) return process;
+        else if (process.executionTime === shortest.executionTime)
+            return process.arrival < shortest.arrival ? process : shortest;
+        else return shortest;
+    });
 }
 
 // Função para obter o próximo processo a ser executado usando o algoritmo RR (Round Robin)
@@ -267,7 +276,7 @@ function getNextProcessEDF(processList, currentTime, quantum) {
 function handleNextProcess(schedulingAlgorithm, processList, currentTime, quantum, currentProcess) {
     switch (schedulingAlgorithm) {
         case "SJF":
-            return getNextProcessSJF(processList, currentTime);
+            return getNextProcessSJF(processList, currentTime, currentProcess);
         case "FIFO":
             return getNextProcessFIFO(processList, currentTime);
         case "RR":
