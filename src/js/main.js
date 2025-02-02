@@ -235,14 +235,15 @@ function getNextProcessSJF(processList, currentTime, currentProcess) {
 }
 
 // Função para obter o próximo processo a ser executado usando o algoritmo RR (Round Robin)
-function getNextProcessRR(processList, currentTime, quantum, lastProcess) {
+function getNextProcessRR(processList, currentTime, lastProcess) {
     // Filtra os processos prontos para execução
     const readyProcesses = processList.filter(p => p.arrival <= currentTime && p.remainingTime > 0);
 
     if (readyProcesses.length === 0) return null; // Retorna null se não houver processos prontos
 
-    // Encontra o índice do último processo executado
-    const lastIndex = processList.findIndex(p => p.id === (lastProcess ? lastProcess.id : null));
+    // Encontra o índice do último processo executado, se estiver definido.
+    // Se não, começa do início da lista
+    const lastIndex = lastProcess ? processList.findIndex(p => p.id === (lastProcess ? lastProcess.id : null)) : -1;
 
     // Inicia a busca pelo próximo processo após o último executado
     let nextIndex = (lastIndex + 1) % processList.length;
@@ -260,7 +261,7 @@ function getNextProcessRR(processList, currentTime, quantum, lastProcess) {
 }
 
 // Função para obter o próximo processo usando o algoritmo EDF (Earliest Deadline First)
-function getNextProcessEDF(processList, currentTime, quantum) {
+function getNextProcessEDF(processList, currentTime) {
     // Filtra os processos que já chegaram e ainda não foram concluídos
     const readyProcesses = processList.filter(p => p.arrival <= currentTime && p.remainingTime > 0);
 
@@ -273,16 +274,22 @@ function getNextProcessEDF(processList, currentTime, quantum) {
 }
 
 // Determina qual algoritmo de escalonamento será usado
-function handleNextProcess(schedulingAlgorithm, processList, currentTime, quantum, currentProcess) {
+function handleNextProcess(schedulingAlgorithm, processList, currentTime, quantum, currentProcess, lastProcessRR) {
     switch (schedulingAlgorithm) {
         case "SJF":
             return getNextProcessSJF(processList, currentTime, currentProcess);
         case "FIFO":
             return getNextProcessFIFO(processList, currentTime);
         case "RR":
-            return getNextProcessRR(processList, currentTime, quantum, currentProcess);
+            // Se ainda estamos dentro do quantum do processo atual, continue executando-o
+            if (currentProcess && currentProcess.remainingTime > 0 && currentProcess.quantumCounter < quantum) {
+                return currentProcess;
+            } else {
+                // Caso contrário, selecione o próximo processo baseado no algoritmo RR
+                return getNextProcessRR(processList, currentTime, lastProcessRR);
+            }
         case "EDF":
-            return getNextProcessEDF(processList, currentTime, quantum, currentProcess);
+            return getNextProcessEDF(processList, currentTime);
         default:
             alert("Algoritmo não implementado");
     }
@@ -357,6 +364,7 @@ async function runScheduling() {
 
     let currentTime = 0;
     let currentProcess = null;
+    let lastProcessRR = null;
 
     // Loop que simula a execução do escalonamento dos processos
     while (!allDone(listOfProcessToBeExecuted)) {
@@ -365,7 +373,8 @@ async function runScheduling() {
             listOfProcessToBeExecuted,
             currentTime,
             quantum,
-            currentProcess
+            currentProcess,
+            lastProcessRR
         );
 
         if (!newProcess) {
@@ -377,7 +386,12 @@ async function runScheduling() {
         }
 
         // Verifica preempção por deadline:
-        if (currentProcess && currentProcess.id !== newProcess.id && currentProcess.remainingTime > 0) {
+        if (
+            schedulingAlgorithm === "EDF" &&
+            currentProcess &&
+            currentProcess.id !== newProcess.id &&
+            currentProcess.remainingTime > 0
+        ) {
             console.log(`💡 Preempção por deadline: ${currentProcess.id} → ${newProcess.id} em t=${currentTime}`);
 
             // Desenha os blocos de overhead para o processo preemptado
@@ -396,6 +410,8 @@ async function runScheduling() {
 
         // Atualiza o processo em execução para o novo processo que foi escolhido
         currentProcess = newProcess;
+        // Mantém a referência do último processo executado para o RR
+        lastProcessRR = newProcess;
 
         // TODO: atualizar currentTime com o retorno da função (adicionando ou não page faults)
         ensureProcessPagesInRAM(currentProcess, currentTime);
@@ -409,7 +425,7 @@ async function runScheduling() {
         // Verifica a previsão de término e se o deadline foi ultrapassado
         const willFinishTime = currentTime + 1;
         if (
-            !(schedulingAlgorithm === "FIFO" || schedulingAlgorithm === "SJF") &&
+            (schedulingAlgorithm === "RR" || schedulingAlgorithm === "EDF") &&
             willFinishTime > currentProcess.individualDeadline
         ) {
             executionBlock.classList.add("deadline-exceeded");
