@@ -1,7 +1,423 @@
 import { initializeProcessPageTable, ensureProcessPagesInRAM, renderMemory } from "./memory.js";
 
 // Estrutura de dados para armazenar os processos
-const processes = [];
+//const processes = [];
+// Estrutura de dados para armazenar os processos
+const processes = [
+    {
+        id: "P1",
+        executionTime: 5,
+        pages: 10,
+        deadline: 10,
+        arrival: 0,
+        pageTable: [
+            {
+                pageNumber: 0,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 1,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 2,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 3,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 4,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 5,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 6,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 7,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 8,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 9,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+        ],
+    },
+    {
+        id: "P2",
+        executionTime: 4,
+        pages: 10,
+        deadline: 7,
+        arrival: 2,
+        pageTable: [
+            {
+                pageNumber: 0,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 1,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 2,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 3,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 4,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 5,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 6,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 7,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 8,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 9,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+        ],
+    },
+    {
+        id: "P3",
+        executionTime: 4,
+        pages: 10,
+        deadline: 3,
+        arrival: 2,
+        pageTable: [
+            {
+                pageNumber: 0,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 1,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 2,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 3,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 4,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 5,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 6,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 7,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 8,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 9,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+        ],
+    },
+    {
+        id: "P4",
+        executionTime: 2,
+        pages: 10,
+        deadline: 4,
+        arrival: 5,
+        pageTable: [
+            {
+                pageNumber: 0,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 1,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 2,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 3,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 4,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 5,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 6,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 7,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 8,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 9,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+        ],
+    },
+    {
+        id: "P5",
+        executionTime: 5,
+        pages: 10,
+        deadline: 20,
+        arrival: 0,
+        pageTable: [
+            {
+                pageNumber: 0,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 1,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 2,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 3,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 4,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 5,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 6,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 7,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 8,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 9,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+        ],
+    },
+    {
+        id: "P6",
+        executionTime: 5,
+        pages: 10,
+        deadline: 20,
+        arrival: 0,
+        pageTable: [
+            {
+                pageNumber: 0,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 1,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 2,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 3,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 4,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 5,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 6,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 7,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 8,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 9,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+        ],
+    },
+    {
+        id: "P7",
+        executionTime: 5,
+        pages: 10,
+        deadline: 20,
+        arrival: 0,
+        pageTable: [
+            {
+                pageNumber: 0,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 1,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 2,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 3,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 4,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 5,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 6,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 7,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 8,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+            {
+                pageNumber: 9,
+                inRAM: false,
+                memoryFrameIndex: null,
+            },
+        ],
+    },
+];
 
 // Referências aos elementos HTML que interagem com os dados dos processos
 const executionTimeInput = document.getElementById("executionTime");
