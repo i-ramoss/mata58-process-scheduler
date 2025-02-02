@@ -163,6 +163,44 @@ function removePageFromDisk(processId, pageNumber) {
     }
 }
 
+function replacePageByFIFO(processId, pageNumber, currentTime) {
+    // Verifica se há páginas na RAM
+    if (ramMemory.length === 0) {
+        console.error("Erro: Memória RAM vazia.");
+        return;
+    }
+
+    // Encontra a página mais antiga (FIFO)
+    let oldestPageIndex = 0;
+    let oldestTime = ramMemory[0].arrivalTime;
+
+    for (let i = 1; i < ramMemory.length; i++) {
+        if (ramMemory[i].arrivalTime < oldestTime) {
+            oldestTime = ramMemory[i].arrivalTime;
+            oldestPageIndex = i;
+        }
+    }
+
+    // Pega a página que será removida
+    const removedPage = ramMemory[oldestPageIndex];
+
+    // Move a página removida para o disco
+    movePageToDisk(removedPage.processId, removedPage.processPageNumber);
+
+    // Substitui pela nova página do processo
+    ramMemory[oldestPageIndex] = {
+        processId: processId,
+        processPageNumber: pageNumber,
+        arrivalTime: currentTime,
+        lastUsedTime: currentTime,
+    };
+
+    console.log(`Página ${removedPage.processPageNumber} do processo ${removedPage.processId} removida da RAM.`);
+    console.log(`Nova página ${pageNumber} do processo ${processId} adicionada na posição ${oldestPageIndex}.`);
+
+    renderMemory();
+}
+
 function handlePageReplacement(processId, pageNumber, currentTime) {
     const pageReplacementAlgorithm = document.getElementById("pageReplacementAlgorithm").value;
 
@@ -173,9 +211,7 @@ function handlePageReplacement(processId, pageNumber, currentTime) {
     }
 }
 
-function replacePageByFIFO(processId, pageNumber, currentTime) {
-    return;
-}
+
 
 function replacePageByLRU(processId, pageNumber, currentTime) {
     return;
