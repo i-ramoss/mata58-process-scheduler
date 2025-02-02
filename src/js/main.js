@@ -63,6 +63,28 @@ startBtn.addEventListener("click", () => {
     runScheduling(); // Inicia a execução dos processos
 });
 
+resetBtn.addEventListener("click", () => {
+    if (processes.length === 0) {
+        alert("Adicione ao menos um processo!"); // Alerta se não houver processos
+        return;
+    }
+    // Limpa a lista de processos
+    processes.length = 0;
+
+    // Remove a tabela de processos da interface
+    processTableDiv.innerHTML = "";
+
+    // Limpa o gráfico de Gantt
+    ganttChart.innerHTML = "";
+
+    
+
+    // Reseta o Turnaround Médio
+    document.getElementById("averageTurnaround").textContent = "Turnaround Médio: -";
+
+});
+
+
 // Função para simular um atraso na execução de um processo (usada para a animação)
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
