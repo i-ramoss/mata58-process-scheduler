@@ -24,8 +24,49 @@ const schedulingAlgorithmSelected = document.getElementById("schedulingAlgorithm
 const startBtn = document.getElementById("startBtn");
 const resetBtn = document.getElementById("resetBtn");
 
+//Botão da legenda
+const legendaBtn = document.getElementById("legenda_btn")
+const legenda = document.querySelector(".legenda");
+
+let blocksAdded = false; // Flag para controlar a adição/remoção
+
+legendaBtn.addEventListener("click", () => {
+    if (!blocksAdded) {
+        // Criar os blocos
+        const block1 = document.createElement("div");
+        const block2 = document.createElement("div");
+        const block3 = document.createElement("div");
+        const block4 = document.createElement("div");
+
+        block1.innerHTML = `<span style="margin-left: 30px;">Execução</span>`;
+        block2.innerHTML = `<span style="margin-left: 30px;">Espera</span>`;
+        block3.innerHTML = `<span style="margin-left: 30px;">Overhead</span>`;
+        block4.innerHTML = `<span style="margin-left: 30px;">Ausente</span>`;
+
+        // Adiciona classes
+        block1.classList.add("gantt-block", "execution");
+        block2.classList.add("gantt-block", "waiting");
+        block3.classList.add("gantt-block", "overhead");
+        block4.classList.add("gantt-block", "no-arrived");
+
+        // Adiciona os blocos ao container
+        legenda.appendChild(block1);
+        legenda.appendChild(block2);
+        legenda.appendChild(block3);
+        legenda.appendChild(block4);
+
+        blocksAdded = true; // Atualiza a flag
+    } else {
+        // Remove todos os blocos filhos ao clicar novamente
+        legenda.innerHTML = "";
+        blocksAdded = false;
+    }
+});
 // Div que exibe o gráfico de Gantt com a execução dos processos
 const ganttChart = document.getElementById("ganttChart");
+
+
+
 
 // Evento disparado ao clicar para adicionar um novo processo
 addProcessBtn.addEventListener("click", () => {
@@ -62,6 +103,28 @@ startBtn.addEventListener("click", () => {
 
     runScheduling(); // Inicia a execução dos processos
 });
+
+resetBtn.addEventListener("click", () => {
+    if (processes.length === 0) {
+        alert("Adicione ao menos um processo!"); // Alerta se não houver processos
+        return;
+    }
+    // Limpa a lista de processos
+    processes.length = 0;
+
+    // Remove a tabela de processos da interface
+    processTableDiv.innerHTML = "";
+
+    // Limpa o gráfico de Gantt
+    ganttChart.innerHTML = "";
+
+    
+
+    // Reseta o Turnaround Médio
+    document.getElementById("averageTurnaround").textContent = "Turnaround Médio: -";
+
+});
+
 
 // Função para simular um atraso na execução de um processo (usada para a animação)
 function sleep(ms) {
