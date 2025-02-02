@@ -138,12 +138,6 @@ function createGanttBlock(type) {
     }
     // TODO: adicionar else if para page fault
 
-    // Nunca estava sendo acessado de fato
-    // Marca o bloco como "deadline-exceeded" caso o processo ultrapasse o prazo, exceto para FIFO ou SJF
-    // if ((algorithm !== "FIFO" && algorithm !== "SJF") && type === "execution") {
-    //     block.classList.add("deadline-exceeded");
-    // }
-
     return block;
 }
 
@@ -223,109 +217,15 @@ function handleNextProcess(schedulingAlgorithm, processList, currentTime, quantu
     }
 }
 
-// Função principal que executa o escalonamento dos processos
-async function runScheduling() {
-    // Cria uma cópia da lista de processos, adicionando dados necessários para execução
-    let listOfProcessToBeExecuted = processes.map(currentProcess => ({
-        ...currentProcess,
-        remainingTime: currentProcess.executionTime,
-        finishTime: 0,
-        individualDeadline: currentProcess.arrival + currentProcess.deadline,
-    }));
+function drawOverheadBlockForPreemptedProcess(processList, preemptedProcess, processRows, currentTime, overheadTime) {
+    console.log(`⏱ Desenhando overhead de ${preemptedProcess.id} no tempo ${currentTime}`);
 
-    // Cria as linhas do gráfico para cada processo
-    const processRows = createGanttRowsForProcesses(listOfProcessToBeExecuted);
+    for (let i = 0; i < overheadTime; i++) {
+        const overheadBlock = createGanttBlock("overhead");
+        processRows[preemptedProcess.id].appendChild(overheadBlock);
 
-    // Variáveis de controle do tempo e do último processo executado
-    const overheadTime = parseInt(overheadInput.value, 10) || 0;
-    const schedulingAlgorithm = schedulingAlgorithmSelected.value;
-    const quantum = 2; // Definido para 2 por padrão
-
-    let currentTime = 0;
-    let lastProcess = null;
-
-    // Loop que simula a execução do escalonamento dos processos
-    while (!allDone(listOfProcessToBeExecuted)) {
-        let currentProcess = null;
-
-        // Determina qual algoritmo de escalonamento será usado
-        switch (schedulingAlgorithm) {
-            case "SJF":
-                currentProcess = getNextProcessSJF(listOfProcessToBeExecuted, currentTime);
-                break;
-            case "FIFO":
-                currentProcess = getNextProcessFIFO(listOfProcessToBeExecuted, currentTime);
-                break;
-            case "RR":
-                currentProcess = getNextProcessRR(listOfProcessToBeExecuted, currentTime, quantum, lastProcess);
-                break;
-            case "EDF":
-                currentProcess = getNextProcessEDF(listOfProcessToBeExecuted, currentTime, quantum);
-                break;
-            default:
-                alert("Algoritmo não implementado");
-                return; // Interrompe a execução caso o algoritmo não esteja implementado
-        }
-
-        if (currentProcess) {
-            // TODO: atualizar currentTime com o retorno da função (adicionando ou não page faults)
-            ensureProcessPagesInRAM(currentProcess, currentTime);
-            // currentTime = ensureProcessPagesInRAM(currentProcess, currentTime);
-        } else {
-            console.log(`🔥 não tem processo para ser executado no tempo: ${currentTime}`);
-
-            // Se não há processo para executar no momento, adiciona blocos de waiting/noArrived
-            listOfProcessToBeExecuted.forEach(process => {
-                if (process.remainingTime > 0) {
-                    if (process.arrival <= currentTime) {
-                        const waitingBlock = createGanttBlock("waiting");
-                        processRows[process.id].appendChild(waitingBlock);
-                    } else {
-                        const noArrivedBlock = createGanttBlock("noArrived");
-                        processRows[process.id].appendChild(noArrivedBlock);
-                    }
-                }
-            });
-
-            // Incrementa o tempo atual e aguarda para a visualização
-            currentTime++;
-            await sleep(speedRange.value);
-            continue;
-        }
-
-        // Adiciona blocos de overhead caso haja troca de processo (apenas RR e EDF)
-        if (
-            lastProcess &&
-            lastProcess !== currentProcess &&
-            overheadTime > 0 &&
-            (schedulingAlgorithm == "RR" || schedulingAlgorithm == "EDF")
-        ) {
-            console.log("lastProcess", lastProcess);
-
-            for (let i = 0; i < overheadTime; i++) {
-                const overheadBlock = createGanttBlock("overhead");
-                processRows[lastProcess.id].appendChild(overheadBlock);
-
-                listOfProcessToBeExecuted.forEach(process => {
-                    if (process.id !== lastProcess.id && process.remainingTime > 0) {
-                        if (process.arrival <= currentTime) {
-                            const waitingBlock = createGanttBlock("waiting");
-                            processRows[process.id].appendChild(waitingBlock);
-                        } else {
-                            const noArrivedBlock = createGanttBlock("noArrived");
-                            processRows[process.id].appendChild(noArrivedBlock);
-                        }
-                    }
-                });
-
-                currentTime++;
-                await sleep(speedRange.value);
-            }
-        }
-
-        // Atualiza os blocos de waiting para os processos que não estão sendo executados
-        listOfProcessToBeExecuted.forEach(process => {
-            if (process.id !== currentProcess.id && process.remainingTime > 0) {
+        processList.forEach(process => {
+            if (process.id !== preemptedProcess.id && process.remainingTime > 0) {
                 if (process.arrival <= currentTime) {
                     const waitingBlock = createGanttBlock("waiting");
                     processRows[process.id].appendChild(waitingBlock);
@@ -335,6 +235,37 @@ async function runScheduling() {
                 }
             }
         });
+    }
+}
+
+function drawBlocksWhenCpuIsIdle(processList, processRows, currentTime) {
+    processList.forEach(process => {
+        if (process.remainingTime > 0) {
+            if (process.arrival <= currentTime) {
+                const waitingBlock = createGanttBlock("waiting");
+                processRows[process.id].appendChild(waitingBlock);
+            } else {
+                const noArrivedBlock = createGanttBlock("noArrived");
+                processRows[process.id].appendChild(noArrivedBlock);
+            }
+        }
+    });
+}
+
+function drawWaitingOrNoArrivedBlocks(processList, currentProcess, processRows, currentTime) {
+    processList.forEach(process => {
+        if (process.id !== currentProcess.id && process.remainingTime > 0) {
+            if (process.arrival <= currentTime) {
+                const waitingBlock = createGanttBlock("waiting");
+                processRows[process.id].appendChild(waitingBlock);
+            } else {
+                const noArrivedBlock = createGanttBlock("noArrived");
+                processRows[process.id].appendChild(noArrivedBlock);
+            }
+        }
+    });
+}
+
 
         // Cria o bloco de execução para o processo atual
         const executionBlock = createGanttBlock("execution");
