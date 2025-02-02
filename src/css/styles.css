@@ -148,6 +148,7 @@ button:hover {
 .gantt-blocks-container {
     display: flex;
     gap: 4px;
+    
     /* overflow-x: auto; */
     /* white-space: nowrap; */
     /* padding-bottom: 5px; */
@@ -158,6 +159,8 @@ button:hover {
     width: 25px;
     border: 1px solid #999;
     border-radius: 5px;
+    font-size: 12px;
+    margin-bottom: 5px;
 }
 
 /* Cores para os estados */
@@ -179,7 +182,7 @@ button:hover {
     outline: 1px solid #dc3545;
 }
 
-/**/
+/* turnaround*/
 
 .turnaround{
     display: flex;
@@ -191,6 +194,27 @@ button:hover {
     background-color: hsl(0, 0%, 100%);
     border: 1px solid #999 ;
     border-radius: 5px ;
-    width: 30%;
-    
+    width: 30%; 
+}
+
+/* legenda */
+
+.lgd-btn{
+    display: flex;
+    justify-content: flex-start;
+    margin-left: 50px;
+    padding-bottom: 20px;
+}
+
+#legenda_btn{
+    align-items: center ;
+    border: 1px solid #999 ;
+    border-radius: 5px ;
+    font-size: 10px;
+    width: 5%; 
+}
+
+.legenda{
+    display: block;
+    margin-left: 50px;
 }
