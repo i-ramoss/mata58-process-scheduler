@@ -25,7 +25,7 @@ const startBtn = document.getElementById("startBtn");
 const resetBtn = document.getElementById("resetBtn");
 
 //Botão da legenda
-const legendaBtn = document.getElementById("legenda_btn")
+const legendaBtn = document.getElementById("legenda_btn");
 const legenda = document.querySelector(".legenda");
 
 let blocksAdded = false; // Flag para controlar a adição/remoção
@@ -64,9 +64,6 @@ legendaBtn.addEventListener("click", () => {
 });
 // Div que exibe o gráfico de Gantt com a execução dos processos
 const ganttChart = document.getElementById("ganttChart");
-
-
-
 
 // Evento disparado ao clicar para adicionar um novo processo
 addProcessBtn.addEventListener("click", () => {
@@ -118,13 +115,9 @@ resetBtn.addEventListener("click", () => {
     // Limpa o gráfico de Gantt
     ganttChart.innerHTML = "";
 
-    
-
     // Reseta o Turnaround Médio
     document.getElementById("averageTurnaround").textContent = "Turnaround Médio: -";
-
 });
-
 
 // Função para simular um atraso na execução de um processo (usada para a animação)
 function sleep(ms) {
@@ -263,6 +256,12 @@ function getNextProcessEDF(processList, currentTime, quantum) {
     const readyProcesses = processList.filter(p => p.arrival <= currentTime && p.remainingTime > 0);
 
     if (readyProcesses.length === 0) return null; // Nenhum processo disponível no momento
+
+    // Ordena os processos pela menor deadline absoluta
+    readyProcesses.sort((a, b) => a.individualDeadline - b.individualDeadline);
+
+    return readyProcesses[0]; // Retorna o processo com o menor deadline
+}
 
 // Determina qual algoritmo de escalonamento será usado
 function handleNextProcess(schedulingAlgorithm, processList, currentTime, quantum, currentProcess) {
