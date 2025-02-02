@@ -2,8 +2,22 @@
 const ramMemory = new Array(50).fill(null);
 const diskMemory = new Array(100).fill(null);
 
+const startBtn = document.getElementById("startBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+
 const DEFAULT_PAGE_FAULT_TIME = 2;
 
+resetBtn.addEventListener("click", () => {
+    const ramGrid = document.getElementById("ramGrid");
+    const diskGrid = document.getElementById("diskGrid");
+
+    // Reseta o conteúdo do grid
+    ramMemory.fill(null);
+    diskMemory.fill(null);
+
+    renderMemory();
+})
 export function renderMemory() {
     const ramGrid = document.getElementById("ramGrid");
     const diskGrid = document.getElementById("diskGrid");
