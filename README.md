@@ -3,7 +3,7 @@
 
 ## About
 
-Este projeto foi desenvolvido para a disciplina MATA58 da UFBA, com o intuito de implementar os algoritmos de escalonamento de processos FIFO, SJF, RR e EDF. E também apresentar o processo de substituição de paginação usando os algoritmos FIFO e LRU. O simulador pode ser acessado aqui.
+Este projeto foi desenvolvido para a disciplina MATA58 da UFBA, com o intuito de implementar os algoritmos de escalonamento de processos FIFO, SJF, RR e EDF. E também apresentar o processo de substituição de paginação usando os algoritmos FIFO e LRU. O simulador pode ser acessado <a href ="https://www.google.com/">aqui</a>.
 
 ## Authors
 Ian Ramos, Otavio Novaes e Raquel Marques
