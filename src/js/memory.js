@@ -201,7 +201,8 @@ function replacePageByLRU(processList, processId, pageNumber, currentTime) {
         };
 
         // Atualiza o pageTable do processo
-        const pageToUpdate = process.pageTable.find(p => p.pageNumber === pageNumber);
+        const processToUpdate = processList.find(p => p.id === processId);
+        const pageToUpdate = processToUpdate?.pageTable.find(p => p.pageNumber === pageNumber);
         pageToUpdate.inRAM = true;
         pageToUpdate.memoryFrameIndex = lruIndex;
     } else {
