@@ -432,7 +432,7 @@ async function runScheduling() {
         lastProcessRR = newProcess;
 
         // TODO: atualizar currentTime com o retorno da função (adicionando ou não page faults)
-        ensureProcessPagesInRAM(currentProcess, currentTime);
+        ensureProcessPagesInRAM(listOfProcessToBeExecuted, currentProcess, currentTime);
 
         // Atualiza os blocos de waiting para os processos que não estão sendo executados
         drawWaitingOrNoArrivedBlocks(listOfProcessToBeExecuted, currentProcess, processRows, currentTime);
