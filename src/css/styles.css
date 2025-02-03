@@ -108,7 +108,6 @@ button:hover {
     background-color: #007bff;
     color: white;
     font-size: 15px;
-
 }
 
 /* Estilização do Gráfico de Gantt */
@@ -148,7 +147,7 @@ button:hover {
 .gantt-blocks-container {
     display: flex;
     gap: 4px;
-    
+
     /* overflow-x: auto; */
     /* white-space: nowrap; */
     /* padding-bottom: 5px; */
@@ -184,37 +183,36 @@ button:hover {
 
 /* turnaround*/
 
-.turnaround{
+.turnaround {
     display: flex;
     justify-content: center;
-
 }
-#averageTurnaround{
-    align-items: center ;
+#averageTurnaround {
+    align-items: center;
     background-color: hsl(0, 0%, 100%);
-    border: 1px solid #999 ;
-    border-radius: 5px ;
-    width: 30%; 
+    border: 1px solid #999;
+    border-radius: 5px;
+    width: 30%;
 }
 
 /* legenda */
 
-.lgd-btn{
+.lgd-btn {
     display: flex;
     justify-content: flex-start;
     margin-left: 50px;
     padding-bottom: 20px;
 }
 
-#legenda_btn{
-    align-items: center ;
-    border: 1px solid #999 ;
-    border-radius: 5px ;
+#legenda_btn {
+    align-items: center;
+    border: 1px solid #999;
+    border-radius: 5px;
     font-size: 10px;
-    width: 5%; 
+    width: 5%;
 }
 
-.legenda{
+.legenda {
     display: block;
     margin-left: 50px;
 }
@@ -223,10 +221,11 @@ button:hover {
     display: flex;
     margin-top: 10px;
     padding-left: 50px; /* Mesmo padding dos labels dos processos */
+    width: fit-content;
 }
 
 .time-label {
-    width: 29px; /* Largura igual aos blocos do Gantt */
+    width: 25px; /* Largura igual aos blocos do Gantt */
     text-align: center;
     font-size: 0.8em;
 }

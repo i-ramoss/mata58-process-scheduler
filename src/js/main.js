@@ -118,8 +118,8 @@ resetBtn.addEventListener("click", () => {
     // Reseta o Turnaround Médio
     document.getElementById("averageTurnaround").textContent = "Turnaround Médio: -";
 
-    const timeLabels = document.getElementById("timeLabels");
-    if (timeLabels) timeLabels.remove();
+    // const timeLabels = document.getElementById("timeLabels");
+    // if (timeLabels) timeLabels.remove();
 });
 
 // Função para simular um atraso na execução de um processo (usada para a animação)
@@ -155,9 +155,9 @@ function createGanttRowsForProcesses(processList) {
     const processRows = {};
 
     // Cria container para os contadores de tempo
-    const timeLabelsContainer = document.createElement("div");
-    timeLabelsContainer.id = "timeLabels";
-    timeLabelsContainer.classList.add("gantt-time-labels");
+    // const timeLabelsContainer = document.createElement("div");
+    // timeLabelsContainer.id = "timeLabels";
+    // timeLabelsContainer.classList.add("gantt-time-labels");
 
     processList.forEach(currentProcess => {
         // Cria um container para a linha de cada processo no gráfico
@@ -177,13 +177,13 @@ function createGanttRowsForProcesses(processList) {
 
         // Adiciona essa linha no gráfico de Gantt
         ganttChart.appendChild(rowContainer);
-        ganttChart.appendChild(timeLabelsContainer);
+        // ganttChart.appendChild(timeLabelsContainer);
 
         // Armazena a referência dessa linha para atualizações futuras
         processRows[currentProcess.id] = blocksContainer;
     });
 
-    return { processRows, timeLabelsContainer };
+    return processRows;
 }
 
 // Função para criar um bloco no gráfico de Gantt
@@ -364,7 +364,7 @@ async function runScheduling() {
     }));
 
     // Cria as linhas do gráfico para cada processo
-    const { processRows, timeLabelsContainer } = createGanttRowsForProcesses(listOfProcessToBeExecuted);
+    const processRows = createGanttRowsForProcesses(listOfProcessToBeExecuted);
 
     // Variáveis de controle do tempo e do último processo executado
     const overheadTime = parseInt(overheadInput.value, 10) || 1;
@@ -421,10 +421,10 @@ async function runScheduling() {
         }
 
         // Sempre que o tempo avançar, atualize os contadores
-        const timeLabel = document.createElement("div");
-        timeLabel.classList.add("time-label");
-        timeLabel.textContent = timeCounter;
-        timeLabelsContainer.appendChild(timeLabel);
+        // const timeLabel = document.createElement("div");
+        // timeLabel.classList.add("time-label");
+        // timeLabel.textContent = timeCounter;
+        // timeLabelsContainer.appendChild(timeLabel);
 
         // Atualiza o processo em execução para o novo processo que foi escolhido
         currentProcess = newProcess;
