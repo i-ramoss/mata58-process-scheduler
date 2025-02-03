@@ -14,13 +14,13 @@
             <div class="process-list">
                 <h3>Processos (valores default)</h3>
                 <div class="process-inputs">
-                    <label>Tempo de execução: <input type="number" id="executionTime" min="1" value="5" /></label>
+                    <label>Chegada: <input type="number" id="arrivalTime" min="0" value="0" /></label>
                     <br />
-                    <label>Páginas: <input type="number" id="pages" min="1" max="10" value="1" /></label>
+                    <label>Tempo de execução: <input type="number" id="executionTime" min="1" value="5" /></label>
                     <br />
                     <label>Deadline: <input type="number" id="deadline" min="1" value="8" /></label>
                     <br />
-                    <label>Chegada: <input type="number" id="arrivalTime" min="0" value="0" /></label>
+                    <label>Páginas: <input type="number" id="pages" min="1" max="10" value="5" /></label>
                     <br />
                     <button id="addProcessBtn">Adicionar processo</button>
                 </div>
@@ -46,8 +46,8 @@
                 <label>
                     Algoritmo de substituição de páginas:
                     <select id="pageReplacementAlgorithm">
-                        <option value="LRU">LRU</option>
                         <option value="FIFO">FIFO</option>
+                        <option value="LRU">LRU</option>
                     </select>
                 </label>
                 <br />
@@ -68,11 +68,21 @@
 
         <!-- Tabela de processos criados -->
         <div id="processTable"></div>
-
+        
+        
         <!-- Gráfico de Gantt -->
         <div class="gantt-container" id="ganttChart">
             <!-- Blocos do Gantt vão ser inseridos aqui via JS -->
         </div>
+        <div class="turnaround">
+            <p id="averageTurnaround">Turnaround médio: </p>
+        </div>
+        <div class="lgd-btn">
+            <button id="legenda_btn">Legenda</button>
+        </div>
+        <div class="legenda"></div>
+        
+        
 
         <!-- Gráfico das Memórias -->
         <div class="memory-container" id="memoryContainer">

@@ -1,17 +1,30 @@
-const ramMemory = new Array(50).fill(null);  // RAM com 50 slots
+const ramMemory = new Array(50).fill(null); // RAM com 50 slots
 const diskMemory = new Array(100).fill(null); // Disco com 100 slots
 
-const DEFAULT_PAGE_FAULT_TIME = 2; // Tempo de falha de página
+const startBtn = document.getElementById("startBtn");
+const resetBtn = document.getElementById("resetBtn");
 
+const DEFAULT_PAGE_FAULT_TIME = 2;
+
+resetBtn.addEventListener("click", () => {
+    const ramGrid = document.getElementById("ramGrid");
+    const diskGrid = document.getElementById("diskGrid");
+
+    // Reseta o conteúdo do grid
+    ramMemory.fill(null);
+    diskMemory.fill(null);
+
+    renderMemory();
+});
 export function renderMemory() {
     const ramGrid = document.getElementById("ramGrid");
     const diskGrid = document.getElementById("diskGrid");
-    
+
     // Reseta o conteúdo do grid
     ramGrid.innerHTML = "";
     diskGrid.innerHTML = "";
 
-     // Cria os blocos de memória RAM
+    // Cria os blocos de memória RAM
     ramMemory.forEach((page, index) => {
         const block = document.createElement("div");
         block.classList.add("memory-block");
@@ -33,7 +46,7 @@ export function renderMemory() {
         ramGrid.appendChild(block);
     });
 
-     // Cria os blocos de memória do disco
+    // Cria os blocos de memória do disco
     diskMemory.forEach((page, index) => {
         const block = document.createElement("div");
         block.classList.add("memory-block");
@@ -71,7 +84,7 @@ export function initializeProcessPageTable(process) {
 // Garantir que todas as páginas do processo estejam na memória RAM para que ele possa ser executado
 export function ensureProcessPagesInRAM(process, currentTime) {
     const updatedCurrentTime = loadProcessPagesToRAM(process, currentTime);
-    
+
     // Atualiza os blocos de memória
     renderMemory();
 
@@ -102,16 +115,14 @@ export function loadProcessPagesToRAM(process, currentTime) {
                 processPage.inRAM = true;
                 processPage.memoryFrameIndex = freeFrameIndex;
             } else {
-                
                 // Não encontrou espaço vazio na memória RAM - Aplicar substituição
-                //console.log("✅ Não encontrou espaço vazio na memória RAM - Aplicar substituição");
                 handlePageReplacement(process.id, processPage.pageNumber, currentTime);
             }
         }
     });
     // Atualiza os blocos de memória
     renderMemory();
-    
+
     return currentTime + pageFaultTime;
 }
 
@@ -148,6 +159,22 @@ function handlePageReplacement(processId, pageNumber, currentTime) {
     } else if (pageReplacementAlgorithm === "LRU") {
         replacePageByLRU(processId, pageNumber, currentTime);
     }
+}
+
+// Implementação do FIFO
+function replacePageByFIFO(processId, pageNumber, currentTime) {
+    const freeFrameIndex = ramMemory.findIndex(frame => frame === null);
+
+    if (freeFrameIndex !== -1) {
+        ramMemory[freeFrameIndex] = {
+            processId: processId,
+            processPageNumber: pageNumber,
+            arrivalTime: currentTime, // Tempo de chegada na memória
+            lastUsedTime: currentTime, // Último acesso à essa página
+        };
+    }
+
+    removePageFromDisk(processId, pageNumber);
 }
 
 // Implementação do LRU
@@ -188,12 +215,6 @@ function replacePageByLRU(processId, pageNumber, currentTime) {
     } else {
         console.error("Não foi possível encontrar a página LRU para substituir.");
     }
-}
-
-// Implementação do LRU
-function replacePageByFIFO(processId, pageNumber, currentTime) {
-    
-    console.log("FIFO ainda não implementado. Coloque a lógica aqui.");
 }
 
 renderMemory();
