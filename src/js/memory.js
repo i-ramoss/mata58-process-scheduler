@@ -2,8 +2,22 @@
 const ramMemory = new Array(50).fill(null);
 const diskMemory = new Array(100).fill(null);
 
+const startBtn = document.getElementById("startBtn");
+const resetBtn = document.getElementById("resetBtn");
+
+
 const DEFAULT_PAGE_FAULT_TIME = 2;
 
+resetBtn.addEventListener("click", () => {
+    const ramGrid = document.getElementById("ramGrid");
+    const diskGrid = document.getElementById("diskGrid");
+
+    // Reseta o conteúdo do grid
+    ramMemory.fill(null);
+    diskMemory.fill(null);
+
+    renderMemory();
+})
 export function renderMemory() {
     const ramGrid = document.getElementById("ramGrid");
     const diskGrid = document.getElementById("diskGrid");
@@ -149,6 +163,24 @@ function removePageFromDisk(processId, pageNumber) {
     }
 }
 
+function replacePageByFIFO(processId, pageNumber, currentTime) {
+    const freeFrameIndex = ramMemory.findIndex(frame => frame === null);    
+
+    if (freeFrameIndex !== -1) {
+        ramMemory[freeFrameIndex] = {
+            processId: processId,
+            processPageNumber: pageNumber,
+            arrivalTime: currentTime, // Tempo de chegada na memória
+            lastUsedTime: currentTime, // Último acesso à essa página
+        };                  
+    }
+
+    removePageFromDisk(processId, pageNumber);
+}
+
+
+
+
 function handlePageReplacement(processId, pageNumber, currentTime) {
     const pageReplacementAlgorithm = document.getElementById("pageReplacementAlgorithm").value;
 
@@ -159,9 +191,7 @@ function handlePageReplacement(processId, pageNumber, currentTime) {
     }
 }
 
-function replacePageByFIFO(processId, pageNumber, currentTime) {
-    return;
-}
+
 
 function replacePageByLRU(processId, pageNumber, currentTime) {
     return;

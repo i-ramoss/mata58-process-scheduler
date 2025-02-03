@@ -1,7 +1,40 @@
 import { initializeProcessPageTable, ensureProcessPagesInRAM, renderMemory } from "./memory.js";
 
 // Estrutura de dados para armazenar os processos
-const processes = [];
+const processes = [
+    {
+        id: "P1",
+        executionTime: 5,
+        pages: 9,
+        deadline: 10,
+        arrival: 0,
+        pageTable: [],
+    },
+    {
+        id: "P2",
+        executionTime: 4,
+        pages: 3,
+        deadline: 7,
+        arrival: 2,
+        pageTable: [],
+    },
+    {
+        id: "P3",
+        executionTime: 4,
+        pages: 3,
+        deadline: 3,
+        arrival: 2,
+        pageTable: [],
+    },
+    {
+        id: "P4",
+        executionTime: 2,
+        pages: 8,
+        deadline: 4,
+        arrival: 5,
+        pageTable: [],
+    },
+];
 
 // Referências aos elementos HTML que interagem com os dados dos processos
 const executionTimeInput = document.getElementById("executionTime");
@@ -117,6 +150,9 @@ resetBtn.addEventListener("click", () => {
 
     // Reseta o Turnaround Médio
     document.getElementById("averageTurnaround").textContent = "Turnaround Médio: -";
+
+    const timeLabels = document.getElementById("timeLabels");
+    if (timeLabels) timeLabels.remove();
 });
 
 // Função para simular um atraso na execução de um processo (usada para a animação)
@@ -151,6 +187,11 @@ function createGanttRowsForProcesses(processList) {
 
     const processRows = {};
 
+    // Cria container para os contadores de tempo
+    const timeLabelsContainer = document.createElement("div");
+    timeLabelsContainer.id = "timeLabels";
+    timeLabelsContainer.classList.add("gantt-time-labels");
+
     processList.forEach(currentProcess => {
         // Cria um container para a linha de cada processo no gráfico
         const rowContainer = document.createElement("div");
@@ -169,12 +210,13 @@ function createGanttRowsForProcesses(processList) {
 
         // Adiciona essa linha no gráfico de Gantt
         ganttChart.appendChild(rowContainer);
+        ganttChart.appendChild(timeLabelsContainer);
 
         // Armazena a referência dessa linha para atualizações futuras
         processRows[currentProcess.id] = blocksContainer;
     });
 
-    return processRows;
+    return { processRows, timeLabelsContainer };
 }
 
 // Função para criar um bloco no gráfico de Gantt
@@ -355,7 +397,7 @@ async function runScheduling() {
     }));
 
     // Cria as linhas do gráfico para cada processo
-    const processRows = createGanttRowsForProcesses(listOfProcessToBeExecuted);
+    const { processRows, timeLabelsContainer } = createGanttRowsForProcesses(listOfProcessToBeExecuted);
 
     // Variáveis de controle do tempo e do último processo executado
     const overheadTime = parseInt(overheadInput.value, 10) || 1;
@@ -363,6 +405,7 @@ async function runScheduling() {
     const quantum = parseInt(quantumInput.value, 10) || 2;
 
     let currentTime = 0;
+    let timeCounter = 0;
     let currentProcess = null;
     let lastProcessRR = null;
 
@@ -381,6 +424,7 @@ async function runScheduling() {
             drawBlocksWhenCpuIsIdle(listOfProcessToBeExecuted, processRows, currentTime);
 
             currentTime++;
+            timeCounter++;
             await sleep(speedRange.value);
             continue;
         }
@@ -401,12 +445,19 @@ async function runScheduling() {
                 drawWaitingOrNoArrivedBlocks(listOfProcessToBeExecuted, currentProcess, processRows, currentTime);
 
                 currentTime++;
+                timeCounter++;
                 await sleep(speedRange.value);
             }
 
             // Reseta o contador de quantum do processo preemptado
             currentProcess.quantumCounter = 0;
         }
+
+        // Sempre que o tempo avançar, atualize os contadores
+        const timeLabel = document.createElement("div");
+        timeLabel.classList.add("time-label");
+        timeLabel.textContent = timeCounter;
+        timeLabelsContainer.appendChild(timeLabel);
 
         // Atualiza o processo em execução para o novo processo que foi escolhido
         currentProcess = newProcess;
@@ -436,6 +487,7 @@ async function runScheduling() {
 
         // Atualiza o tempo e a quantidade restante do processo
         currentTime++;
+        timeCounter++;
         currentProcess.remainingTime--;
 
         if (currentProcess.remainingTime <= 0) {
@@ -458,6 +510,7 @@ async function runScheduling() {
                     drawWaitingOrNoArrivedBlocks(listOfProcessToBeExecuted, currentProcess, processRows, currentTime);
 
                     currentTime++;
+                    timeCounter++;
                     await sleep(speedRange.value);
                 }
                 // Zera o contador e força a seleção de um novo processo na próxima iteração
