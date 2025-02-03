@@ -1,40 +1,7 @@
 import { initializeProcessPageTable, ensureProcessPagesInRAM, renderMemory } from "./memory.js";
 
 // Estrutura de dados para armazenar os processos
-const processes = [
-    {
-        id: "P1",
-        executionTime: 5,
-        pages: 9,
-        deadline: 10,
-        arrival: 0,
-        pageTable: [],
-    },
-    {
-        id: "P2",
-        executionTime: 4,
-        pages: 3,
-        deadline: 7,
-        arrival: 2,
-        pageTable: [],
-    },
-    {
-        id: "P3",
-        executionTime: 4,
-        pages: 3,
-        deadline: 3,
-        arrival: 2,
-        pageTable: [],
-    },
-    {
-        id: "P4",
-        executionTime: 2,
-        pages: 8,
-        deadline: 4,
-        arrival: 5,
-        pageTable: [],
-    },
-];
+const processes = [];
 
 // Referências aos elementos HTML que interagem com os dados dos processos
 const executionTimeInput = document.getElementById("executionTime");
