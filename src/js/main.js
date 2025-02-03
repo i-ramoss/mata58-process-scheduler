@@ -1,4 +1,4 @@
-import { initializeProcessPageTable, ensureProcessPagesInRAM, renderMemory } from "./memory.js";
+import { initializeProcessPageTable, ensureProcessPagesInRAM, renderMemory, ramMemory, diskMemory } from "./memory.js";
 
 // Estrutura de dados para armazenar os processos
 const processes = [];
@@ -62,7 +62,8 @@ legendaBtn.addEventListener("click", () => {
         blocksAdded = false;
     }
 });
-// Div que exibe o gráfico de Gantt com a execução dos processos
+
+// Div que exsibe o gráfico de Gantt com a execução dos processos
 const ganttChart = document.getElementById("ganttChart");
 
 // Evento disparado ao clicar para adicionar um novo processo
@@ -94,10 +95,20 @@ speedRange.addEventListener("input", () => {
 // Evento disparado ao clicar no botão "Iniciar Execução"
 startBtn.addEventListener("click", () => {
     if (processes.length === 0) {
-        alert("Adicione ao menos um processo!"); // Alerta se não houver processos
+        alert("Adicione ao menos um processo!");
         return;
     }
 
+    // Limpa a memória e a tabela de página de todos os processos
+    ramMemory.fill(null);
+    diskMemory.fill(null);
+
+    processes.forEach(process => {
+        process.pageTable = [];
+        initializeProcessPageTable(process);
+    });
+
+    renderMemory(); // Atualiza a interface da memória
     runScheduling(); // Inicia a execução dos processos
 });
 

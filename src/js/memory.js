@@ -1,5 +1,5 @@
-const ramMemory = new Array(50).fill(null); // RAM com 50 slots
-const diskMemory = new Array(100).fill(null); // Disco com 100 slots
+export const ramMemory = new Array(50).fill(null); // RAM com 50 slots
+export const diskMemory = new Array(100).fill(null); // Disco com 100 slots
 
 const startBtn = document.getElementById("startBtn");
 const resetBtn = document.getElementById("resetBtn");
@@ -16,6 +16,7 @@ resetBtn.addEventListener("click", () => {
 
     renderMemory();
 });
+
 export function renderMemory() {
     const ramGrid = document.getElementById("ramGrid");
     const diskGrid = document.getElementById("diskGrid");
