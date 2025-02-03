@@ -30,38 +30,38 @@ const legenda = document.querySelector(".legenda");
 
 let blocksAdded = false; // Flag para controlar a adição/remoção
 
-legendaBtn.addEventListener("click", () => {
-    if (!blocksAdded) {
-        // Criar os blocos
-        const block1 = document.createElement("div");
-        const block2 = document.createElement("div");
-        const block3 = document.createElement("div");
-        const block4 = document.createElement("div");
+// legendaBtn.addEventListener("click", () => {
+//     if (!blocksAdded) {
+//         // Criar os blocos
+//         const block1 = document.createElement("div");
+//         const block2 = document.createElement("div");
+//         const block3 = document.createElement("div");
+//         const block4 = document.createElement("div");
 
-        block1.innerHTML = `<span style="margin-left: 30px;">Execução</span>`;
-        block2.innerHTML = `<span style="margin-left: 30px;">Espera</span>`;
-        block3.innerHTML = `<span style="margin-left: 30px;">Overhead</span>`;
-        block4.innerHTML = `<span style="margin-left: 30px;">Ausente</span>`;
+//         block1.innerHTML = `<span style="margin-left: 30px;">Execução</span>`;
+//         block2.innerHTML = `<span style="margin-left: 30px;">Espera</span>`;
+//         block3.innerHTML = `<span style="margin-left: 30px;">Overhead</span>`;
+//         block4.innerHTML = `<span style="margin-left: 30px;">Ausente</span>`;
 
-        // Adiciona classes
-        block1.classList.add("gantt-block", "execution");
-        block2.classList.add("gantt-block", "waiting");
-        block3.classList.add("gantt-block", "overhead");
-        block4.classList.add("gantt-block", "no-arrived");
+//         // Adiciona classes
+//         block1.classList.add("gantt-block", "execution");
+//         block2.classList.add("gantt-block", "waiting");
+//         block3.classList.add("gantt-block", "overhead");
+//         block4.classList.add("gantt-block", "no-arrived");
 
-        // Adiciona os blocos ao container
-        legenda.appendChild(block1);
-        legenda.appendChild(block2);
-        legenda.appendChild(block3);
-        legenda.appendChild(block4);
+//         // Adiciona os blocos ao container
+//         legenda.appendChild(block1);
+//         legenda.appendChild(block2);
+//         legenda.appendChild(block3);
+//         legenda.appendChild(block4);
 
-        blocksAdded = true; // Atualiza a flag
-    } else {
-        // Remove todos os blocos filhos ao clicar novamente
-        legenda.innerHTML = "";
-        blocksAdded = false;
-    }
-});
+//         blocksAdded = true; // Atualiza a flag
+//     } else {
+//         // Remove todos os blocos filhos ao clicar novamente
+//         legenda.innerHTML = "";
+//         blocksAdded = false;
+//     }
+// });
 
 // Div que exsibe o gráfico de Gantt com a execução dos processos
 const ganttChart = document.getElementById("ganttChart");

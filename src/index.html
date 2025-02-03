@@ -63,26 +63,45 @@
                 <p id="speedValue">100 ms</p>
                 <button id="startBtn">Iniciar execução</button>
                 <button id="resetBtn">Resetar execução</button>
+
+                <div id="legenda">
+                    <p>Legenda:</p>
+
+                    <div class="legend-item">
+                        <div class="gantt-block execution"></div>
+                        <span class="legend-label">Execução</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="gantt-block waiting"></div>
+                        <span class="legend-label">Espera</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="gantt-block overhead"></div>
+                        <span class="legend-label">Sobrecarga</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="gantt-block no-arrived"></div>
+                        <span class="legend-label">Ausente</span>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Tabela de processos criados -->
         <div id="processTable"></div>
-        
-        
+
         <!-- Gráfico de Gantt -->
         <div class="gantt-container" id="ganttChart">
             <!-- Blocos do Gantt vão ser inseridos aqui via JS -->
         </div>
         <div class="turnaround">
-            <p id="averageTurnaround">Turnaround médio: </p>
+            <p id="averageTurnaround">Turnaround médio:</p>
         </div>
-        <div class="lgd-btn">
+
+        <!-- <div class="lgd-btn">
             <button id="legenda_btn">Legenda</button>
-        </div>
-        <div class="legenda"></div>
-        
-        
+        </div> -->
+        <!-- <div class="legenda"></div> -->
 
         <!-- Gráfico das Memórias -->
         <div class="memory-container" id="memoryContainer">

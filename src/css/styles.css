@@ -197,6 +197,26 @@ button:hover {
 
 /* legenda */
 
+/* Container de legenda */
+#legenda {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    margin-top: 15px;
+}
+
+/* Cada item da legenda: bloco + label alinhados em linha */
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.legend-item div {
+    margin-bottom: 0;
+}
+
 .lgd-btn {
     display: flex;
     justify-content: flex-start;
