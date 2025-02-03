@@ -218,3 +218,15 @@ button:hover {
     display: block;
     margin-left: 50px;
 }
+
+.gantt-time-labels {
+    display: flex;
+    margin-top: 10px;
+    padding-left: 50px; /* Mesmo padding dos labels dos processos */
+}
+
+.time-label {
+    width: 29px; /* Largura igual aos blocos do Gantt */
+    text-align: center;
+    font-size: 0.8em;
+}

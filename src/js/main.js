@@ -537,6 +537,10 @@ resetBtn.addEventListener("click", () => {
     // Reseta o Turnaround Médio
     document.getElementById("averageTurnaround").textContent = "Turnaround Médio: -";
 
+    
+    const timeLabels = document.getElementById("timeLabels");
+    if(timeLabels) timeLabels.remove();
+
 });
 
 
@@ -572,6 +576,12 @@ function createGanttRowsForProcesses(processList) {
 
     const processRows = {};
 
+    // Cria container para os contadores de tempo
+    const timeLabelsContainer = document.createElement("div");
+    timeLabelsContainer.id = "timeLabels";
+    timeLabelsContainer.classList.add("gantt-time-labels");
+    
+
     processList.forEach(currentProcess => {
         // Cria um container para a linha de cada processo no gráfico
         const rowContainer = document.createElement("div");
@@ -590,12 +600,15 @@ function createGanttRowsForProcesses(processList) {
 
         // Adiciona essa linha no gráfico de Gantt
         ganttChart.appendChild(rowContainer);
+        ganttChart.appendChild(timeLabelsContainer);
 
         // Armazena a referência dessa linha para atualizações futuras
         processRows[currentProcess.id] = blocksContainer;
     });
 
-    return processRows;
+    return {processRows,
+        timeLabelsContainer
+    };
 }
 
 // Função para criar um bloco no gráfico de Gantt
@@ -708,8 +721,8 @@ async function runScheduling() {
     }));
 
     // Cria as linhas do gráfico para cada processo
-    const processRows = createGanttRowsForProcesses(listOfProcessToBeExecuted);
-
+    const {processRows, timeLabelsContainer} = createGanttRowsForProcesses(listOfProcessToBeExecuted);
+    let timeCounter = 0;
     // Variáveis de controle do tempo e do último processo executado
     const overheadTime = parseInt(overheadInput.value, 10) || 0;
     const schedulingAlgorithm = schedulingAlgorithmSelected.value;
@@ -740,6 +753,14 @@ async function runScheduling() {
                 alert("Algoritmo não implementado");
                 return; // Interrompe a execução caso o algoritmo não esteja implementado
         }
+
+        // Sempre que o tempo avançar, atualize os contadores
+        const timeLabel = document.createElement("div");
+        timeLabel.classList.add("time-label");
+        timeLabel.textContent = timeCounter;
+        timeLabelsContainer.appendChild(timeLabel);
+
+        timeCounter++;
 
         if (currentProcess) {
             // TODO: atualizar currentTime com o retorno da função (adicionando ou não page faults)
