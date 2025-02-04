@@ -2,6 +2,7 @@ import { initializeProcessPageTable, ensureProcessPagesInRAM, renderMemory, ramM
 
 // Estrutura de dados para armazenar os processos
 const processes = [];
+const roundRobinReadyQueue = [];
 
 // Referências aos elementos HTML que interagem com os dados dos processos
 const executionTimeInput = document.getElementById("executionTime");
@@ -23,45 +24,6 @@ const schedulingAlgorithmSelected = document.getElementById("schedulingAlgorithm
 // Botões de ação para interagir com o escalonador
 const startBtn = document.getElementById("startBtn");
 const resetBtn = document.getElementById("resetBtn");
-
-//Botão da legenda
-const legendaBtn = document.getElementById("legenda_btn");
-const legenda = document.querySelector(".legenda");
-
-let blocksAdded = false; // Flag para controlar a adição/remoção
-
-// legendaBtn.addEventListener("click", () => {
-//     if (!blocksAdded) {
-//         // Criar os blocos
-//         const block1 = document.createElement("div");
-//         const block2 = document.createElement("div");
-//         const block3 = document.createElement("div");
-//         const block4 = document.createElement("div");
-
-//         block1.innerHTML = `<span style="margin-left: 30px;">Execução</span>`;
-//         block2.innerHTML = `<span style="margin-left: 30px;">Espera</span>`;
-//         block3.innerHTML = `<span style="margin-left: 30px;">Overhead</span>`;
-//         block4.innerHTML = `<span style="margin-left: 30px;">Ausente</span>`;
-
-//         // Adiciona classes
-//         block1.classList.add("gantt-block", "execution");
-//         block2.classList.add("gantt-block", "waiting");
-//         block3.classList.add("gantt-block", "overhead");
-//         block4.classList.add("gantt-block", "no-arrived");
-
-//         // Adiciona os blocos ao container
-//         legenda.appendChild(block1);
-//         legenda.appendChild(block2);
-//         legenda.appendChild(block3);
-//         legenda.appendChild(block4);
-
-//         blocksAdded = true; // Atualiza a flag
-//     } else {
-//         // Remove todos os blocos filhos ao clicar novamente
-//         legenda.innerHTML = "";
-//         blocksAdded = false;
-//     }
-// });
 
 // Div que exsibe o gráfico de Gantt com a execução dos processos
 const ganttChart = document.getElementById("ganttChart");
@@ -113,10 +75,6 @@ startBtn.addEventListener("click", () => {
 });
 
 resetBtn.addEventListener("click", () => {
-    if (processes.length === 0) {
-        alert("Adicione ao menos um processo!"); // Alerta se não houver processos
-        return;
-    }
     // Limpa a lista de processos
     processes.length = 0;
 
@@ -128,9 +86,6 @@ resetBtn.addEventListener("click", () => {
 
     // Reseta o Turnaround Médio
     document.getElementById("averageTurnaround").textContent = "Turnaround Médio: -";
-
-    // const timeLabels = document.getElementById("timeLabels");
-    // if (timeLabels) timeLabels.remove();
 });
 
 // Função para simular um atraso na execução de um processo (usada para a animação)
@@ -165,11 +120,6 @@ function createGanttRowsForProcesses(processList) {
 
     const processRows = {};
 
-    // Cria container para os contadores de tempo
-    // const timeLabelsContainer = document.createElement("div");
-    // timeLabelsContainer.id = "timeLabels";
-    // timeLabelsContainer.classList.add("gantt-time-labels");
-
     processList.forEach(currentProcess => {
         // Cria um container para a linha de cada processo no gráfico
         const rowContainer = document.createElement("div");
@@ -188,7 +138,6 @@ function createGanttRowsForProcesses(processList) {
 
         // Adiciona essa linha no gráfico de Gantt
         ganttChart.appendChild(rowContainer);
-        // ganttChart.appendChild(timeLabelsContainer);
 
         // Armazena a referência dessa linha para atualizações futuras
         processRows[currentProcess.id] = blocksContainer;
@@ -254,30 +203,42 @@ function getNextProcessSJF(processList, currentTime, currentProcess) {
     });
 }
 
-// Função para obter o próximo processo a ser executado usando o algoritmo RR (Round Robin)
-function getNextProcessRR(processList, currentTime, lastProcess) {
-    // Filtra os processos prontos para execução
-    const readyProcesses = processList.filter(p => p.arrival <= currentTime && p.remainingTime > 0);
-
-    if (readyProcesses.length === 0) return null; // Retorna null se não houver processos prontos
-
-    // Encontra o índice do último processo executado, se estiver definido.
-    // Se não, começa do início da lista
-    const lastIndex = lastProcess ? processList.findIndex(p => p.id === (lastProcess ? lastProcess.id : null)) : -1;
-
-    // Inicia a busca pelo próximo processo após o último executado
-    let nextIndex = (lastIndex + 1) % processList.length;
-
-    // Procura o próximo processo pronto para execução
-    for (let i = 0; i < processList.length; i++) {
-        const process = processList[nextIndex];
-        if (process.arrival <= currentTime && process.remainingTime > 0) {
-            return process; // Retorna o próximo processo pronto
+function updateRoundRobinReadyQueue(processList, currentTime, currentProcess) {
+    processList.forEach(process => {
+        if (
+            process.arrival <= currentTime &&
+            process.remainingTime > 0 &&
+            process !== currentProcess &&
+            !roundRobinReadyQueue.includes(process)
+        ) {
+            roundRobinReadyQueue.push(process);
         }
-        nextIndex = (nextIndex + 1) % processList.length; // Avança para o próximo processo na lista
+    });
+}
+
+// Função para obter o próximo processo a ser executado usando o algoritmo RR (Round Robin)
+function getNextProcessRR(processList, currentTime, currentProcess, quantum) {
+    // Atualiza a fila com os processos que acabaram de chegar
+    updateRoundRobinReadyQueue(processList, currentTime, currentProcess);
+
+    // Se o processo atual ainda tem quantum restante, continua executando-o
+    if (currentProcess && currentProcess.remainingTime > 0 && currentProcess.quantumCounter < quantum) {
+        return currentProcess;
+    } else {
+        // Se o processo atual foi preemptado e ainda precisa ser executado, insere-o no final da fila
+        if (currentProcess && currentProcess.remainingTime > 0 && currentProcess.quantumCounter >= quantum) {
+            currentProcess.quantumCounter = 0;
+            roundRobinReadyQueue.push(currentProcess);
+        }
     }
 
-    return null; // Retorna null se não houver processos para executar
+    if (roundRobinReadyQueue.length > 0) {
+        return roundRobinReadyQueue.shift();
+    } else {
+        // Garantir que nenhum processo será perdido (caso algum processo chegue durante o overhead)
+        updateRoundRobinReadyQueue(processList, currentTime, currentProcess);
+        return roundRobinReadyQueue.shift() || null;
+    }
 }
 
 // Função para obter o próximo processo usando o algoritmo EDF (Earliest Deadline First)
@@ -294,45 +255,18 @@ function getNextProcessEDF(processList, currentTime) {
 }
 
 // Determina qual algoritmo de escalonamento será usado
-function handleNextProcess(schedulingAlgorithm, processList, currentTime, quantum, currentProcess, lastProcessRR) {
+function handleNextProcess(schedulingAlgorithm, processList, currentTime, quantum, currentProcess) {
     switch (schedulingAlgorithm) {
         case "SJF":
             return getNextProcessSJF(processList, currentTime, currentProcess);
         case "FIFO":
             return getNextProcessFIFO(processList, currentTime);
         case "RR":
-            // Se ainda estamos dentro do quantum do processo atual, continue executando-o
-            if (currentProcess && currentProcess.remainingTime > 0 && currentProcess.quantumCounter < quantum) {
-                return currentProcess;
-            } else {
-                // Caso contrário, selecione o próximo processo baseado no algoritmo RR
-                return getNextProcessRR(processList, currentTime, lastProcessRR);
-            }
+            return getNextProcessRR(processList, currentTime, currentProcess, quantum);
         case "EDF":
             return getNextProcessEDF(processList, currentTime);
         default:
             alert("Algoritmo não implementado");
-    }
-}
-
-function drawOverheadBlockForPreemptedProcess(processList, preemptedProcess, processRows, currentTime, overheadTime) {
-    console.log(`⏱ Desenhando overhead de ${preemptedProcess.id} no tempo ${currentTime}`);
-
-    for (let i = 0; i < overheadTime; i++) {
-        const overheadBlock = createGanttBlock("overhead");
-        processRows[preemptedProcess.id].appendChild(overheadBlock);
-
-        processList.forEach(process => {
-            if (process.id !== preemptedProcess.id && process.remainingTime > 0) {
-                if (process.arrival <= currentTime) {
-                    const waitingBlock = createGanttBlock("waiting");
-                    processRows[process.id].appendChild(waitingBlock);
-                } else {
-                    const noArrivedBlock = createGanttBlock("noArrived");
-                    processRows[process.id].appendChild(noArrivedBlock);
-                }
-            }
-        });
     }
 }
 
@@ -362,6 +296,18 @@ function drawWaitingOrNoArrivedBlocks(processList, currentProcess, processRows, 
             }
         }
     });
+}
+
+function calculateAverageTurnaroundTime(processList) {
+    // Calcula o turnaround médio
+    const totalTurnaroundTime = processList.reduce((sum, process) => {
+        return sum + process.turnaroundTime;
+    }, 0);
+
+    const averageTurnaroundTime = totalTurnaroundTime / processList.length;
+
+    // Exibe o turnaround médio na interface
+    document.getElementById("averageTurnaround").textContent = `Turnaround Médio: ${averageTurnaroundTime.toFixed(2)}`;
 }
 
 // Função principal que executa o escalonamento dos processos
@@ -394,8 +340,7 @@ async function runScheduling() {
             listOfProcessToBeExecuted,
             currentTime,
             quantum,
-            currentProcess,
-            lastProcessRR
+            currentProcess
         );
 
         if (!newProcess) {
@@ -416,7 +361,6 @@ async function runScheduling() {
         ) {
             console.log(`💡 Preempção por deadline: ${currentProcess.id} → ${newProcess.id} em t=${currentTime}`);
 
-            // Desenha os blocos de overhead para o processo preemptado
             for (let i = 0; i < overheadTime; i++) {
                 processRows[currentProcess.id].appendChild(createGanttBlock("overhead"));
 
@@ -424,23 +368,13 @@ async function runScheduling() {
 
                 currentTime++;
                 timeCounter++;
-                await sleep(speedRange.value);
+                // await sleep(speedRange.value);
             }
-
-            // Reseta o contador de quantum do processo preemptado
             currentProcess.quantumCounter = 0;
         }
 
-        // Sempre que o tempo avançar, atualize os contadores
-        // const timeLabel = document.createElement("div");
-        // timeLabel.classList.add("time-label");
-        // timeLabel.textContent = timeCounter;
-        // timeLabelsContainer.appendChild(timeLabel);
-
         // Atualiza o processo em execução para o novo processo que foi escolhido
         currentProcess = newProcess;
-        // Mantém a referência do último processo executado para o RR
-        lastProcessRR = newProcess;
 
         // TODO: atualizar currentTime com o retorno da função (adicionando ou não page faults)
         ensureProcessPagesInRAM(listOfProcessToBeExecuted, currentProcess, currentTime);
@@ -463,7 +397,6 @@ async function runScheduling() {
         // Adiciona o bloco de execução no gráfico de Gantt
         processRows[currentProcess.id].appendChild(executionBlock);
 
-        // Atualiza o tempo e a quantidade restante do processo
         currentTime++;
         timeCounter++;
         currentProcess.remainingTime--;
@@ -489,7 +422,10 @@ async function runScheduling() {
 
                     currentTime++;
                     timeCounter++;
-                    await sleep(speedRange.value);
+                    // await sleep(speedRange.value);
+
+                    // Atualiza a lista de processos do RR (caso algum processo já tenha chegado durante o overhead)
+                    updateRoundRobinReadyQueue(listOfProcessToBeExecuted, currentTime, currentProcess);
                 }
                 // Zera o contador e força a seleção de um novo processo na próxima iteração
                 currentProcess.quantumCounter = 0;
@@ -506,14 +442,7 @@ async function runScheduling() {
     });
 
     // Calcula o turnaround médio
-    const totalTurnaroundTime = listOfProcessToBeExecuted.reduce((sum, process) => {
-        return sum + process.turnaroundTime;
-    }, 0);
-
-    const averageTurnaroundTime = totalTurnaroundTime / listOfProcessToBeExecuted.length;
-
-    // Exibe o turnaround médio na interface
-    document.getElementById("averageTurnaround").textContent = `Turnaround Médio: ${averageTurnaroundTime.toFixed(2)}`;
+    calculateAverageTurnaroundTime(listOfProcessToBeExecuted);
 }
 
 // Temporário (usado para processos já instanciados em código)
