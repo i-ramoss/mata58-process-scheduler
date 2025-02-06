@@ -1,4 +1,11 @@
-import { initializeProcessPageTable, ensureProcessPagesInRAM, renderMemory, ramMemory, diskMemory } from "./memory.js";
+import {
+    initializeProcessPageTable,
+    ensureProcessPagesInRAM,
+    renderMemory,
+    ramMemory,
+    diskMemory,
+    resetMemories,
+} from "./memory.js";
 
 // Estrutura de dados para armazenar os processos
 const processes = [];
@@ -61,6 +68,9 @@ startBtn.addEventListener("click", () => {
         return;
     }
 
+    // Desabilita o botão de iniciar para evitar múltiplas exec
+    startBtn.disabled = true;
+
     // Limpa a memória e a tabela de página de todos os processos
     ramMemory.fill(null);
     diskMemory.fill(null);
@@ -75,14 +85,18 @@ startBtn.addEventListener("click", () => {
 });
 
 resetBtn.addEventListener("click", () => {
+    startBtn.disabled = false; // Habilita o botão de iniciar
     // Limpa a lista de processos
-    processes.length = 0;
+    // processes.length = 0;
 
     // Remove a tabela de processos da interface
-    processTableDiv.innerHTML = "";
+    // processTableDiv.innerHTML = "";
 
     // Limpa o gráfico de Gantt
     ganttChart.innerHTML = "";
+
+    // Limpa a memória
+    resetMemories();
 
     // Reseta o Turnaround Médio
     document.getElementById("averageTurnaround").textContent = "Turnaround Médio: -";
@@ -160,8 +174,9 @@ function createGanttBlock(type) {
         block.classList.add("overhead");
     } else if (type === "noArrived") {
         block.classList.add("no-arrived");
+    } else if (type === "pageFault") {
+        block.classList.add("page-fault");
     }
-    // TODO: adicionar else if para page fault
 
     return block;
 }
@@ -301,7 +316,7 @@ function drawWaitingOrNoArrivedBlocks(processList, currentProcess, processRows, 
 function calculateAverageTurnaroundTime(processList) {
     // Calcula o turnaround médio
     const totalTurnaroundTime = processList.reduce((sum, process) => {
-        return sum + process.turnaroundTime;
+        return sum + (process.finishTime - process.arrival);
     }, 0);
 
     const averageTurnaroundTime = totalTurnaroundTime / processList.length;
@@ -376,8 +391,19 @@ async function runScheduling() {
         // Atualiza o processo em execução para o novo processo que foi escolhido
         currentProcess = newProcess;
 
-        // TODO: atualizar currentTime com o retorno da função (adicionando ou não page faults)
-        ensureProcessPagesInRAM(listOfProcessToBeExecuted, currentProcess, currentTime);
+        const pageFault = ensureProcessPagesInRAM(listOfProcessToBeExecuted, currentProcess, currentTime);
+
+        if (pageFault !== 0) {
+            for (let i = 0; i < pageFault; i++) {
+                processRows[currentProcess.id].appendChild(createGanttBlock("pageFault"));
+
+                drawWaitingOrNoArrivedBlocks(listOfProcessToBeExecuted, currentProcess, processRows, currentTime);
+
+                currentTime++;
+                timeCounter++;
+                await sleep(speedRange.value);
+            }
+        }
 
         // Atualiza os blocos de waiting para os processos que não estão sendo executados
         drawWaitingOrNoArrivedBlocks(listOfProcessToBeExecuted, currentProcess, processRows, currentTime);
@@ -436,13 +462,10 @@ async function runScheduling() {
         await sleep(speedRange.value);
     }
 
-    // Após a execução, calcula o turnaround de cada processo
-    listOfProcessToBeExecuted.forEach(process => {
-        process.turnaroundTime = process.finishTime - process.arrival;
-    });
-
     // Calcula o turnaround médio
     calculateAverageTurnaroundTime(listOfProcessToBeExecuted);
+    // Habilita o botão de iniciar após finalizar a execução
+    startBtn.disabled = false;
 }
 
 // Temporário (usado para processos já instanciados em código)

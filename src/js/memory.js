@@ -1,21 +1,12 @@
 export const ramMemory = new Array(50).fill(null); // RAM com 50 slots
 export const diskMemory = new Array(100).fill(null); // Disco com 100 slots
 
-const startBtn = document.getElementById("startBtn");
-const resetBtn = document.getElementById("resetBtn");
-
 const DEFAULT_PAGE_FAULT_TIME = 2;
 
-resetBtn.addEventListener("click", () => {
-    const ramGrid = document.getElementById("ramGrid");
-    const diskGrid = document.getElementById("diskGrid");
-
-    // Reseta o conteúdo do grid
+export function resetMemories() {
     ramMemory.fill(null);
     diskMemory.fill(null);
-
-    renderMemory();
-});
+}
 
 export function renderMemory() {
     const ramGrid = document.getElementById("ramGrid");
@@ -83,23 +74,23 @@ export function initializeProcessPageTable(process) {
 }
 
 // Garantir que todas as páginas do processo estejam na memória RAM para que ele possa ser executado
-export function ensureProcessPagesInRAM(process, currentTime) {
-    const updatedCurrentTime = loadProcessPagesToRAM(process, currentTime);
+export function ensureProcessPagesInRAM(processList, process, currentTime) {
+    const pageFaultTime = loadProcessPagesToRAM(processList, process, currentTime);
 
     // Atualiza os blocos de memória
     renderMemory();
 
-    return updatedCurrentTime;
+    return pageFaultTime;
 }
 
 // Carrega as páginas do processo na memória RAM (se não estiverem lá) e retorna o tempo atualizado (em caso de page fault)
 export function loadProcessPagesToRAM(processList, currentProcess, currentTime) {
-    let pageFaultTime = 0;
+    let hasPageFault = false;
 
     currentProcess.pageTable.forEach(processPage => {
         // Adiciona a página na memória RAM, caso já não esteja
         if (!processPage.inRAM) {
-            pageFaultTime += DEFAULT_PAGE_FAULT_TIME;
+            hasPageFault = true;
 
             const freeFrameIndex = ramMemory.findIndex(frame => frame === null);
 
@@ -125,7 +116,7 @@ export function loadProcessPagesToRAM(processList, currentProcess, currentTime) 
     // Atualiza os blocos de memória
     renderMemory();
 
-    return currentTime + pageFaultTime;
+    return hasPageFault ? DEFAULT_PAGE_FAULT_TIME : 0;
 }
 
 function movePageToDisk(processId, pageNumber) {
@@ -155,7 +146,7 @@ function removePageFromDisk(processId, pageNumber) {
     if (filledFrameIndex !== -1) {
         diskMemory[filledFrameIndex] = null;
     } else {
-        console.error("Página não encontrada no disco");
+        console.error(`Página ${pageNumber} do processo ${processId} não encontrada no disco`);
     }
 }
 
@@ -186,13 +177,13 @@ function replacePageByLRU(processList, processId, pageNumber, currentTime) {
     if (lruPage !== null && lruIndex !== -1) {
         console.log(`Substituindo página de processo ${processId} (página ${lruPage.processPageNumber})`);
 
+        // Atualiza o pageTable do processo
+        updateProcessPage(processList, lruPage.processId, lruPage.processPageNumber, false, null);
+
         // Primeiro, move a página LRU para o disco
         movePageToDisk(lruPage.processId, lruPage.processPageNumber);
 
-        // Remove a página da RAM
-        ramMemory[lruIndex] = null;
-
-        // Coloca a nova página na RAM
+        // Substitui a nova página na RAM
         ramMemory[lruIndex] = {
             processId: processId,
             processPageNumber: pageNumber,
@@ -200,11 +191,11 @@ function replacePageByLRU(processList, processId, pageNumber, currentTime) {
             lastUsedTime: currentTime, // Atualiza o tempo de uso da página
         };
 
+        // Remove, se existir, a página do disco
+        removePageFromDisk(processId, pageNumber);
+
         // Atualiza o pageTable do processo
-        const processToUpdate = processList.find(p => p.id === processId);
-        const pageToUpdate = processToUpdate?.pageTable.find(p => p.pageNumber === pageNumber);
-        pageToUpdate.inRAM = true;
-        pageToUpdate.memoryFrameIndex = lruIndex;
+        updateProcessPage(processList, processId, pageNumber, true, lruIndex);
     } else {
         console.error("Não foi possível encontrar a página LRU para substituir.");
     }
@@ -212,43 +203,33 @@ function replacePageByLRU(processList, processId, pageNumber, currentTime) {
 
 // Implementação do FIFO
 function replacePageByFIFO(processList, processId, pageNumber, currentTime) {
-    // Verifica se há páginas na RAM
-    if (ramMemory.length === 0) {
-        console.error("Erro: Memória RAM vazia.");
-        return;
-    }
-
-    // Encontra a página mais antiga (FIFO)
-    let oldestPageIndex = 0;
-    let oldestTime = ramMemory[0].arrivalTime;
-
-    for (let i = 1; i < ramMemory.length; i++) {
-        if (ramMemory[i].arrivalTime < oldestTime) {
-            oldestTime = ramMemory[i].arrivalTime;
-            oldestPageIndex = i;
+    // Encontrar index da página mais antiga (FIFO)
+    let oldestPageIndex = ramMemory.reduce((earliestPageIndex, currentPage, currentPageIndex) => {
+        if (
+            !ramMemory[earliestPageIndex] ||
+            (currentPage && currentPage.arrivalTime < ramMemory[earliestPageIndex].arrivalTime)
+        ) {
+            return currentPageIndex;
         }
-    }
+        return earliestPageIndex;
+    }, 0);
 
     // Pega a página que será removida da RAM
-    const removedPage = ramMemory[oldestPageIndex];
+    const oldestPage = ramMemory[oldestPageIndex];
 
-    // Atualiza a tabela de páginas do processo removido RAM -> Disco
-    const selectedProcess = processList.find(process => process.id === removedPage.processId);
-    if (selectedProcess) {
-        const selectedProcessPage = selectedProcess.pageTable.find(
-            page => page.pageNumber === removedPage.processPageNumber
-        );
+    // Move a página antiga para o disco
+    movePageToDisk(oldestPage.processId, oldestPage.processPageNumber);
 
-        if (selectedProcessPage) {
-            selectedProcessPage.inRAM = false;
-            selectedProcessPage.memoryFrameIndex = null;
-        }
-    }
+    // Atualiza a tabela de páginas do processo removido (RAM -> Disco)
+    updateProcessPage(processList, oldestPage.processId, oldestPage.processPageNumber, false, null);
 
-    // Move a página removida para o disco
-    movePageToDisk(removedPage.processId, removedPage.processPageNumber);
+    // Remove do disco a página do processo que será carregado na RAM
+    removePageFromDisk(processId, pageNumber);
 
-    // Substitui pela nova página do processo
+    // Atualiza a tabela de páginas do processo substituído Disco -> RAM
+    updateProcessPage(processList, processId, pageNumber, true, oldestPageIndex);
+
+    // Substitui pela nova página do processo na RAM
     ramMemory[oldestPageIndex] = {
         processId: processId,
         processPageNumber: pageNumber,
@@ -256,20 +237,15 @@ function replacePageByFIFO(processList, processId, pageNumber, currentTime) {
         lastUsedTime: currentTime,
     };
 
-    // Atualiza a tabela de páginas do processo substituído Disco -> RAM
-    const replacedProcess = processList.find(process => process.id === processId);
-    if (replacedProcess) {
-        const replacedProcessPage = replacedProcess.pageTable.find(page => page.pageNumber === pageNumber);
-        if (replacedProcessPage) {
-            replacedProcessPage.inRAM = true;
-            replacedProcessPage.memoryFrameIndex = oldestPageIndex;
-        }
-    }
+    // renderMemory();
+}
 
-    // Remove a página substituída do disco
-    removePageFromDisk(processId, pageNumber);
+function updateProcessPage(processList, processId, pageNumber, inRAM, memoryFrameIndex) {
+    const process = processList.find(process => process.id === processId);
+    const processPage = process.pageTable.find(page => page.pageNumber === pageNumber);
 
-    renderMemory();
+    processPage.inRAM = inRAM;
+    processPage.memoryFrameIndex = memoryFrameIndex;
 }
 
 renderMemory();

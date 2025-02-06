@@ -176,6 +176,9 @@ button:hover {
     border: none;
     background-color: #ccc;
 }
+.page-fault {
+    background-color: #964b00;
+}
 .deadline-exceeded {
     /* background-color: #000000; */
     outline: 1px solid #dc3545;
