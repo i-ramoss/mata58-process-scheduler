@@ -160,6 +160,8 @@ function createGanttBlock(type) {
         block.classList.add("overhead");
     } else if (type === "noArrived") {
         block.classList.add("no-arrived");
+    } else if (type === "pageFault") {
+        block.classList.add("page-fault");
     }
     // TODO: adicionar else if para page fault
 
@@ -376,8 +378,19 @@ async function runScheduling() {
         // Atualiza o processo em execução para o novo processo que foi escolhido
         currentProcess = newProcess;
 
-        // TODO: atualizar currentTime com o retorno da função (adicionando ou não page faults)
-        ensureProcessPagesInRAM(listOfProcessToBeExecuted, currentProcess, currentTime);
+        const pageFault = ensureProcessPagesInRAM(listOfProcessToBeExecuted, currentProcess, currentTime);
+
+        if (pageFault !== 0) {
+            for (let i = 0; i < pageFault; i++) {
+                processRows[currentProcess.id].appendChild(createGanttBlock("pageFault"));
+
+                drawWaitingOrNoArrivedBlocks(listOfProcessToBeExecuted, currentProcess, processRows, currentTime);
+
+                currentTime++;
+                timeCounter++;
+                await sleep(speedRange.value);
+            }
+        }
 
         // Atualiza os blocos de waiting para os processos que não estão sendo executados
         drawWaitingOrNoArrivedBlocks(listOfProcessToBeExecuted, currentProcess, processRows, currentTime);

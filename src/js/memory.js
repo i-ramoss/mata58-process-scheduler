@@ -94,12 +94,12 @@ export function ensureProcessPagesInRAM(process, currentTime) {
 
 // Carrega as páginas do processo na memória RAM (se não estiverem lá) e retorna o tempo atualizado (em caso de page fault)
 export function loadProcessPagesToRAM(processList, currentProcess, currentTime) {
-    let pageFaultTime = 0;
+    let hasPageFault = false;
 
     currentProcess.pageTable.forEach(processPage => {
         // Adiciona a página na memória RAM, caso já não esteja
         if (!processPage.inRAM) {
-            pageFaultTime += DEFAULT_PAGE_FAULT_TIME;
+            hasPageFault = true;
 
             const freeFrameIndex = ramMemory.findIndex(frame => frame === null);
 
@@ -125,7 +125,7 @@ export function loadProcessPagesToRAM(processList, currentProcess, currentTime) 
     // Atualiza os blocos de memória
     renderMemory();
 
-    return currentTime + pageFaultTime;
+    return hasPageFault ? DEFAULT_PAGE_FAULT_TIME : 0;
 }
 
 function movePageToDisk(processId, pageNumber) {
