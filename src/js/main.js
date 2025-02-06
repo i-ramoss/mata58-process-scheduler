@@ -1,4 +1,11 @@
-import { initializeProcessPageTable, ensureProcessPagesInRAM, renderMemory, ramMemory, diskMemory } from "./memory.js";
+import {
+    initializeProcessPageTable,
+    ensureProcessPagesInRAM,
+    renderMemory,
+    ramMemory,
+    diskMemory,
+    resetMemories,
+} from "./memory.js";
 
 // Estrutura de dados para armazenar os processos
 const processes = [];
@@ -61,6 +68,9 @@ startBtn.addEventListener("click", () => {
         return;
     }
 
+    // Desabilita o botão de iniciar para evitar múltiplas exec
+    startBtn.disabled = true;
+
     // Limpa a memória e a tabela de página de todos os processos
     ramMemory.fill(null);
     diskMemory.fill(null);
@@ -75,14 +85,18 @@ startBtn.addEventListener("click", () => {
 });
 
 resetBtn.addEventListener("click", () => {
+    startBtn.disabled = false; // Habilita o botão de iniciar
     // Limpa a lista de processos
-    processes.length = 0;
+    // processes.length = 0;
 
     // Remove a tabela de processos da interface
-    processTableDiv.innerHTML = "";
+    // processTableDiv.innerHTML = "";
 
     // Limpa o gráfico de Gantt
     ganttChart.innerHTML = "";
+
+    // Limpa a memória
+    resetMemories();
 
     // Reseta o Turnaround Médio
     document.getElementById("averageTurnaround").textContent = "Turnaround Médio: -";
@@ -163,7 +177,6 @@ function createGanttBlock(type) {
     } else if (type === "pageFault") {
         block.classList.add("page-fault");
     }
-    // TODO: adicionar else if para page fault
 
     return block;
 }
@@ -303,7 +316,7 @@ function drawWaitingOrNoArrivedBlocks(processList, currentProcess, processRows, 
 function calculateAverageTurnaroundTime(processList) {
     // Calcula o turnaround médio
     const totalTurnaroundTime = processList.reduce((sum, process) => {
-        return sum + process.turnaroundTime;
+        return sum + (process.finishTime - process.arrival);
     }, 0);
 
     const averageTurnaroundTime = totalTurnaroundTime / processList.length;
@@ -449,13 +462,10 @@ async function runScheduling() {
         await sleep(speedRange.value);
     }
 
-    // Após a execução, calcula o turnaround de cada processo
-    listOfProcessToBeExecuted.forEach(process => {
-        process.turnaroundTime = process.finishTime - process.arrival;
-    });
-
     // Calcula o turnaround médio
     calculateAverageTurnaroundTime(listOfProcessToBeExecuted);
+    // Habilita o botão de iniciar após finalizar a execução
+    startBtn.disabled = false;
 }
 
 // Temporário (usado para processos já instanciados em código)
