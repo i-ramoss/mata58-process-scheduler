@@ -8,7 +8,40 @@ import {
 } from "./memory.js";
 
 // Estrutura de dados para armazenar os processos
-const processes = [];
+const processes = [
+    {
+        id: "P1",
+        executionTime: 4,
+        pages: 5,
+        deadline: 7,
+        arrival: 0,
+        pageTable: [],
+    },
+    {
+        id: "P2",
+        executionTime: 2,
+        pages: 5,
+        deadline: 5,
+        arrival: 2,
+        pageTable: [],
+    },
+    {
+        id: "P3",
+        executionTime: 1,
+        pages: 5,
+        deadline: 2,
+        arrival: 4,
+        pageTable: [],
+    },
+    {
+        id: "P4",
+        executionTime: 3,
+        pages: 5,
+        deadline: 10,
+        arrival: 6,
+        pageTable: [],
+    },
+];
 const roundRobinReadyQueue = [];
 
 // Referências aos elementos HTML que interagem com os dados dos processos
@@ -344,9 +377,7 @@ async function runScheduling() {
     const quantum = parseInt(quantumInput.value, 10) || 2;
 
     let currentTime = 0;
-    let timeCounter = 0;
     let currentProcess = null;
-    let lastProcessRR = null;
 
     // Loop que simula a execução do escalonamento dos processos
     while (!allDone(listOfProcessToBeExecuted)) {
@@ -362,7 +393,6 @@ async function runScheduling() {
             drawBlocksWhenCpuIsIdle(listOfProcessToBeExecuted, processRows, currentTime);
 
             currentTime++;
-            timeCounter++;
             await sleep(speedRange.value);
             continue;
         }
@@ -382,7 +412,6 @@ async function runScheduling() {
                 drawWaitingOrNoArrivedBlocks(listOfProcessToBeExecuted, currentProcess, processRows, currentTime);
 
                 currentTime++;
-                timeCounter++;
                 // await sleep(speedRange.value);
             }
             currentProcess.quantumCounter = 0;
@@ -400,8 +429,8 @@ async function runScheduling() {
                 drawWaitingOrNoArrivedBlocks(listOfProcessToBeExecuted, currentProcess, processRows, currentTime);
 
                 currentTime++;
-                timeCounter++;
-                await sleep(speedRange.value);
+                updateRoundRobinReadyQueue(listOfProcessToBeExecuted, currentTime, currentProcess);
+                // await sleep(speedRange.value);
             }
         }
 
@@ -424,16 +453,13 @@ async function runScheduling() {
         processRows[currentProcess.id].appendChild(executionBlock);
 
         currentTime++;
-        timeCounter++;
         currentProcess.remainingTime--;
 
         if (currentProcess.remainingTime <= 0) {
             currentProcess.finishTime = currentTime;
             currentProcess.quantumCounter = 0;
-        }
-
-        // Se preemptivo e o processo ainda não terminou, gerencia o contador de quantum APENAS APÓS A EXECUÇÃO
-        else if (schedulingAlgorithm === "RR" || schedulingAlgorithm === "EDF") {
+        } else if (schedulingAlgorithm === "RR" || schedulingAlgorithm === "EDF") {
+            // Se preemptivo e o processo ainda não terminou, gerencia o contador de quantum APENAS APÓS A EXECUÇÃO
             currentProcess.quantumCounter++;
 
             if (currentProcess.quantumCounter >= quantum) {
@@ -447,7 +473,6 @@ async function runScheduling() {
                     drawWaitingOrNoArrivedBlocks(listOfProcessToBeExecuted, currentProcess, processRows, currentTime);
 
                     currentTime++;
-                    timeCounter++;
                     // await sleep(speedRange.value);
 
                     // Atualiza a lista de processos do RR (caso algum processo já tenha chegado durante o overhead)

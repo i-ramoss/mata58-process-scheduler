@@ -121,7 +121,7 @@ export function loadProcessPagesToRAM(processList, currentProcess, currentTime) 
 
 function movePageToDisk(processId, pageNumber) {
     const pageIsAlreadyInDisk = diskMemory.find(
-        frame => frame && frame.processId === processId && frame.pageNumber === pageNumber
+        frame => frame !== null && frame.processId === processId && frame.pageNumber === pageNumber
     );
 
     if (pageIsAlreadyInDisk) return;
@@ -177,10 +177,10 @@ function replacePageByLRU(processList, processId, pageNumber, currentTime) {
     if (lruPage !== null && lruIndex !== -1) {
         console.log(`Substituindo página de processo ${processId} (página ${lruPage.processPageNumber})`);
 
-        // Atualiza o pageTable do processo
+        // Atualiza a página do processo que está sendo removida da RAM
         updateProcessPage(processList, lruPage.processId, lruPage.processPageNumber, false, null);
 
-        // Primeiro, move a página LRU para o disco
+        // Move a página LRU para o disco
         movePageToDisk(lruPage.processId, lruPage.processPageNumber);
 
         // Substitui a nova página na RAM
@@ -204,15 +204,15 @@ function replacePageByLRU(processList, processId, pageNumber, currentTime) {
 // Implementação do FIFO
 function replacePageByFIFO(processList, processId, pageNumber, currentTime) {
     // Encontrar index da página mais antiga (FIFO)
-    let oldestPageIndex = ramMemory.reduce((earliestPageIndex, currentPage, currentPageIndex) => {
-        if (
-            !ramMemory[earliestPageIndex] ||
-            (currentPage && currentPage.arrivalTime < ramMemory[earliestPageIndex].arrivalTime)
-        ) {
-            return currentPageIndex;
+    let oldestPageIndex = 0;
+    let oldestTime = ramMemory[0].arrivalTime;
+
+    for (let i = 1; i < ramMemory.length; i++) {
+        if (ramMemory[i].arrivalTime < oldestTime) {
+            oldestTime = ramMemory[i].arrivalTime;
+            oldestPageIndex = i;
         }
-        return earliestPageIndex;
-    }, 0);
+    }
 
     // Pega a página que será removida da RAM
     const oldestPage = ramMemory[oldestPageIndex];
